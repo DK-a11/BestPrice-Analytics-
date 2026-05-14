@@ -1,0 +1,179 @@
+.popular-products-block {
+  width: 100%;
+}
+
+.block-header {
+  margin-bottom: 24px;
+}
+
+.block-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Фильтры */
+.category-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.category-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 2px solid #E5E7EB;
+  background: white;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.category-btn:hover {
+  border-color: #10B981;
+  background: #F0FDF4;
+}
+
+.category-btn.active {
+  border-color: #10B981;
+  background: #10B981;
+  color: white;
+}
+
+.category-icon {
+  font-size: 20px;
+}
+
+/* Сетка товаров -> Список товаров */
+.products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+
+/* Loading и Empty states */
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #E5E7EB;
+  border-top-color: #10B981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state p,
+.empty-state p {
+  color: #6B7280;
+  font-size: 16px;
+}
+
+/* Секция магазинов */
+.stores-section {
+  margin-top: 48px;
+  padding-top: 48px;
+  border-top: 2px solid #E5E7EB;
+}
+
+.stores-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 24px;
+}
+
+.stores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(570px, 1fr));
+  gap: 24px;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap; /* перенос на новую строку на мобильных */
+  justify-content: center; /* или flex-start, если нужно слева */
+  align-items: center;
+  gap: 8px; /* равномерные отступы между кнопками */
+  list-style: none; /* убираем маркеры списка */
+  padding: 0;
+  margin: 16px 0;
+}
+
+.page-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.page-link:hover {
+  background-color: #10B981;
+  color: #fff;
+  border-color: #10B981;
+}
+
+/* Опционально: стиль для активной страницы */
+.page-item.active .page-link {
+  background-color: #10B981;
+  color: #fff;
+  border-color: #10B981;
+  cursor: default;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .block-title {
+    font-size: 24px;
+  }
+
+  .category-filters {
+    gap: 8px;
+  }
+
+  .category-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .products-list {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .products-grid,
+  .stores-grid {
+    grid-template-columns: 1fr;
+  }
+}

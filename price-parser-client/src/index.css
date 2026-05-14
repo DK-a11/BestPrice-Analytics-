@@ -1,0 +1,270 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --accent-green: #10B981;
+  --primary-white: #F9FAFB;
+  --contrast-gray: #6B7280;
+  --text-black: #111827;
+  --light-gray: #E5E7EB;
+  --hover-green: #059669;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--primary-white);
+  color: var(--text-black);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Кастомная прокрутка */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--light-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-green);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--hover-green);
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Хедер */
+.app-header {
+  backdrop-filter: blur(10px);
+}
+
+.logo-icon {
+  display: inline-block;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.nav-link {
+  color: #6B7280;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 15px;
+  transition: color 0.2s;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.nav-link:hover {
+  color: #10B981;
+  background: #F0FDF4;
+}
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+}
+
+/* Feature Cards */
+.feature-card {
+  padding: 32px;
+  background: white;
+  border: 2px solid #E5E7EB;
+  border-radius: 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  border-color: #10B981;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.15);
+}
+
+.feature-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.feature-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.feature-description {
+  color: #6B7280;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Утилиты */
+.container {
+  width: 100%;
+  max-width: 1280px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header .container {
+    padding: 16px;
+  }
+
+  .header-logo h1 {
+    font-size: 24px;
+  }
+
+  .hero-section h2 {
+    font-size: 32px;
+  }
+
+  .hero-section p {
+    font-size: 16px;
+  }
+}
+
+/* Адаптация под Telegram */
+.telegram-analytics {
+  --tg-safe-area-top: env(safe-area-inset-top);
+  padding-top: var(--tg-safe-area-top);
+}
+
+.telegram-mode .export-btn {
+  display: none; /* Скрываем кнопки, которые не нужны в боте */
+}
+
+/* Используем цвета темы Telegram, если доступны */
+@supports (background-color: var(--tg-theme-bg-color)) {
+  .telegram-analytics {
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+  }
+}
+
+.store-toggles {
+  padding: 12px 12px;
+  border-bottom: 1px solid #ffffff;
+}
+
+.store-toggles-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.toggles-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle-action-btn {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.toggle-action-btn:hover {
+  background: #F0FDF4;
+  border-color: #10B981;
+}
+
+.store-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.store-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 2px solid;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.store-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.store-chip.inactive {
+  opacity: 0.6;
+  filter: grayscale(0.3);
+}
+
+.chip-icon { font-size: 1rem; }
+.chip-name { font-weight: 500; }
+
+.chip-status {
+  font-size: 0.7rem;
+  margin-left: 2px;
+}
+.chip-status.on { color: #10b981; }
+.chip-status.off { color: #ef4444; }
