@@ -73,8 +73,8 @@ useEffect(() => {
   // Здесь будет реальная загрузка данных из API (возможно все перепишу здесь)
 const loadAnalytics = async () => {
   setIsLoading(true);
-  //await delay(90000);
-  await delay(5000);
+  await delay(90000);
+  //await delay(5000);
 
   try {
 

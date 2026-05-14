@@ -112,7 +112,7 @@ const SearchBar = ({
     setShowDropdown(false);
   
     //Передаём stores в API-запрос
-    //fetchSuggestions(query, selectedStores);
+    fetchSuggestions(query, selectedStores);
   
     if (onSearch) {
       onSearch(query, { stores: selectedStores });
