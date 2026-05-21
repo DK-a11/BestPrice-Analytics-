@@ -19,106 +19,6 @@ apiClient.interceptors.response.use(
   }
 );
 
-// ============= ПОИСК =============
-
-/**
- * Получить автодополнение для поискового запроса
- * @param {string} query - Поисковый запрос
- * @param {string} category - Категория (optional)
- * @param {number} limit - Максимальное количество результатов
- * @returns {Promise}
- */
-export const searchSuggestions = (query, category = null, limit = 8) => {
-  return apiClient.get('/search/suggestions', {
-    params: { q: query, category, limit }
-  });
-};
-
-/**
- * Выполнить поиск товаров
- * @param {string} query - Поисковый запрос
- * @param {object} options - Опции поиска (category, priceRange, stores)
- * @returns {Promise}
- */
-export const searchProducts = (query, options = {}) => {
-  return apiClient.post('/search/query', { query, ...options });
-};
-
-// ============= АНАЛИТИКА =============
-
-/**
- * Получить историю изменения цен товара
- * @param {string} productId - ID товара
- * @param {string} period - Период (7d, 30d, 90d)
- * @returns {Promise}
- */
-export const getPriceHistory = (productId, period = '30d') => {
-  return apiClient.get(`/analytics/price-history/${productId}`, {
-    params: { period }
-  });
-};
-
-/**
- * Получить сравнение цен по магазинам
- * @param {string} productId - ID товара
- * @returns {Promise}
- */
-export const getStoreComparison = (productId) => {
-  return apiClient.get(`/analytics/store-comparison/${productId}`);
-};
-
-/**
- * Получить аналитические инсайты по товару
- * @param {string} productId - ID товара
- * @returns {Promise}
- */
-export const getProductInsights = (productId) => {
-  return apiClient.get(`/analytics/insights/${productId}`);
-};
-
-// ============= ПОПУЛЯРНЫЕ ТОВАРЫ =============
-
-/**
- * Получить популярные товары
- * @param {string} category - Категория (all, electronics, clothing, etc.)
- * @param {number} limit - Максимальное количество товаров
- * @returns {Promise}
- */
-export const getPopularProducts = (category = 'all', limit = 12) => {
-  return apiClient.get('/products/popular', {
-    params: { category, limit }
-  });
-};
-
-/**
- * Получить популярные магазины
- * @returns {Promise}
- */
-export const getPopularStores = () => {
-  return apiClient.get('/stores/popular');
-};
-
-/**
- * Получить категории товаров
- * @returns {Promise}
- */
-export const getCategories = () => {
-  return apiClient.get('/categories');
-};
-
-// ============= ТОВАРЫ =============
-
-/**
- * Получить детальную информацию о товаре
- * @param {string} productId - ID товара
- * @returns {Promise}
- */
-export const getProductDetails = (productId) => {
-  return apiClient.get(`/products/${productId}`);
-};
-
-
-
 export const parseProducts = async (query, options = {}) => {
   const { pages = 1, stores = [] } = options;
   
@@ -128,8 +28,7 @@ export const parseProducts = async (query, options = {}) => {
     pages: parseInt(pages) || 1,
   };
   
-  // 🔥 Добавляем stores только если массив не пустой
-  // Бэкенд при undefined сам подставит все магазины
+
   if (Array.isArray(stores) && stores.length > 0) {
     requestBody.stores = stores;
   }
@@ -140,7 +39,6 @@ export const parseProducts = async (query, options = {}) => {
 };
 
 export const extractCProducts = async (query) => {
-  // 🔹 Склеиваем: база + конечный путь
   const response = await axios.get(`${API_BASE_URL}/analytics/comparison`, {
     params: { query}
   });
@@ -149,7 +47,6 @@ export const extractCProducts = async (query) => {
 };
 
 export const extractHProducts = async (query) => {
-  // 🔹 Склеиваем: база + конечный путь
   const response = await axios.get(`${API_BASE_URL}/analytics/history`, {
     params: { query }
   });
@@ -158,7 +55,6 @@ export const extractHProducts = async (query) => {
 };
 
 export const extractIProducts = async (query) => {
-  // 🔹 Склеиваем: база + конечный путь
   const response = await axios.get(`${API_BASE_URL}/analytics/insights`, {
     params: { query }
     
@@ -169,7 +65,6 @@ export const extractIProducts = async (query) => {
 
 
 export const extractProducts = async (query) => {
-  // 🔹 Склеиваем: база + конечный путь
   const response = await axios.get(`${API_BASE_URL}/analytics/products`, {
     params: { query }
   });
@@ -178,7 +73,6 @@ export const extractProducts = async (query) => {
 };
 
 export const exportProducts = async (query) => {
-  // 🔹 Склеиваем: база + конечный путь
   const response = await axios.get(`${API_BASE_URL}/products/export`, {
     params: { query },
     responseType: 'blob',
@@ -189,5 +83,57 @@ export const exportProducts = async (query) => {
   return response.data;
 };
 
+export const SaveUsers = async (userData) => {
+  const response = await axios.post(`${API_BASE_URL}/register`, {
+    userData
+  });
+
+  return response.data;
+};
+
+export const LoginUsers = async (userData) => {
+  const response = await axios.post(`${API_BASE_URL}/login`, 
+    userData
+  );
+
+  return response.data;
+};
+
+export const querySave = async ({ userId, query }) => {
+  console.log(' querySave вызвана с:', { userId, query });
+  
+  if (!query || !query.trim()) {
+    console.warn('⚠️ Пустой query');
+    return null;
+  }
+
+  const payload = {
+    query: query.trim(),
+  };
+
+  if (userId && userId.trim()) {
+    payload.Id = userId;
+  }
+
+  console.log('📦 Финальный payload:', JSON.stringify(payload, null, 2));
+  console.log('📍 API URL:', `${API_BASE_URL}/query`);
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/query`, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    console.log('✅ Ответ сервера:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Ошибка запроса:', error);
+    console.error('📄 Response data:', error.response?.data);
+    console.error('📄 Response status:', error.response?.status);
+    console.error('📄 Response headers:', error.response?.headers);
+    throw error;
+  }
+};
 
 export default apiClient;

@@ -3,10 +3,6 @@ import { useState, useEffect } from 'react';
 const STORAGE_KEY = 'price_parser_search_history';
 const MAX_HISTORY_ITEMS = 10;
 
-/**
- * Хук для управления историей поиска
- * @returns {object} - { history, addToHistory, clearHistory, removeFromHistory }
- */
 const useSearchHistory = () => {
   const [history, setHistory] = useState([]);
 

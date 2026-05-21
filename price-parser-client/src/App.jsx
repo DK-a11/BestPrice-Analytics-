@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import SearchBar from './components/Search/SearchBar';
@@ -6,9 +6,11 @@ import AnalyticsBlock from './components/Analytics/AnalyticsBlock';
 import PopularProductsBlock from './components/PopularProducts/PopularProductsBlock';
 import Footer from './components/Footer/Footer';
 import TelegramAnalytics from './pages/TelegramAnalytics';
+import RegistrationModal from './components/RegistrationForm/RegistrationModal';
+import LoginModal from './components/RegistrationForm/LoginModal';
+import AccountProfile from './components/RegistrationForm/AccountProfile';
 import './index.css';
 
-// 🎯 Конфигурация магазинов (можно вынести в отдельный файл позже)
 const STORES_CONFIG = [
   { id: 'alser', name: 'Alser', color: '#10b981', icon: '💚' },
   { id: 'kaspi', name: 'Kaspi', color: '#f54545', icon: '🛒' },
@@ -19,13 +21,70 @@ const STORES_CONFIG = [
 function MainApp() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductId, setSelectedProductId] = useState(null);
-
-  // 🆕 Стейт для выбранных магазинов (по умолчанию включены все)
   const [selectedStores, setSelectedStores] = useState(
     STORES_CONFIG.map(s => s.id)
   );
 
-  // 🆕 Функции управления магазинами
+  const [activeModal, setActiveModal] = useState(null); 
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true); 
+
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const userData = localStorage.getItem('user');
+        
+        if (token && userData) {
+          const parsedUser = JSON.parse(userData);
+          setCurrentUser(parsedUser);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('❌ Ошибка проверки авторизации:', error);
+        // При ошибке парсинга очищаем невалидные данные
+        handleLogout();
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  const handleLoginSuccess = (userData) => {
+    const user = userData.user || userData;
+    const token = userData.token || 'mock-token';
+    
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+    
+    // Сохранение в localStorage для сохранения сессии
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    console.log('✅ Пользователь авторизован:', user);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    
+    console.log('👋 Пользователь вышел из аккаунта');
+    
+  };
+
+  const openRegistrationModal = () => setActiveModal('registration');
+  const openLoginModal = () => setActiveModal('login');
+  const closeModals = () => setActiveModal(null);
+  
+  const switchToLogin = () => setActiveModal('login');
+  const switchToRegister = () => setActiveModal('registration');
+
   const toggleStore = (storeId) => {
     setSelectedStores(prev =>
       prev.includes(storeId)
@@ -37,17 +96,21 @@ function MainApp() {
   const selectAllStores = () => setSelectedStores(STORES_CONFIG.map(s => s.id));
   const deselectAllStores = () => setSelectedStores([]);
 
-  // 🔄 Обновлённый обработчик поиска
   const handleSearch = async (query, options = {}) => {
     setSearchQuery(query);
     
-    // Если SearchBar передаёт обновлённый список, синхронизируем
     if (options.stores && Array.isArray(options.stores)) {
       setSelectedStores(options.stores);
     }
 
     setSelectedProductId('demo-product-1');
   };
+
+  const shouldShowModals = !isAuthenticated && activeModal !== null;
+
+  //console.log('👤 currentUser:', currentUser);
+  //console.log('🔑 currentUser._id:', currentUser?._id);
+  //console.log('🔑 currentUser.id:', currentUser?.id);
 
   return (
     <div className="app min-h-screen bg-primary-white">
@@ -71,6 +134,28 @@ function MainApp() {
               <a href="#popular" className="nav-link">Список товаров</a>
               <a href="#about" className="nav-link">О проекте</a>
             </nav>
+
+            {/* 🆕 Условный рендеринг: кнопка входа ИЛИ профиль пользователя */}
+            <div className="auth-section">
+              {authLoading ? (
+                // 🔄 Заглушка во время проверки авторизации
+                <div className="auth-loading w-24 h-10 bg-gray-100 rounded-lg animate-pulse" />
+              ) : !isAuthenticated ? (
+                // 👤 Не авторизован: показываем кнопку "Войти"
+                <button 
+                  onClick={openLoginModal}
+                  className="btn-login px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                >
+                  Войти
+                </button>
+              ) : (
+                // ✅ Авторизован: показываем профиль пользователя
+                <AccountProfile 
+                  user={currentUser} 
+                  onLogout={handleLogout} 
+                />
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -89,7 +174,6 @@ function MainApp() {
               </p>
             </div>
             
-            {/*Передаем компонент SearchBar в App.jsx  */}
             <SearchBar
               onSearch={handleSearch}
               selectedStores={selectedStores}
@@ -97,6 +181,7 @@ function MainApp() {
               onSelectAll={selectAllStores}
               onDeselectAll={deselectAllStores}
               storesConfig={STORES_CONFIG}
+              userId={currentUser?._id || currentUser?.id || null}
             />
 
             {searchQuery && (
@@ -104,7 +189,6 @@ function MainApp() {
                 <p className="text-contrast-gray">
                   Результаты поиска для: <span className="font-semibold text-accent-green">"{searchQuery}"</span>
                 </p>
-                {/* 🆕 Показываем активные магазины */}
                 {selectedStores.length > 0 && selectedStores.length < STORES_CONFIG.length && (
                   <p className="text-sm text-contrast-gray mt-2">
                     Магазины: {selectedStores.map(id => 
@@ -169,6 +253,24 @@ function MainApp() {
 
       {/* Футер */}
       <Footer />
+
+      {/* Модальные окна — рендерим только если пользователь НЕ авторизован */}
+      {shouldShowModals && activeModal === 'registration' && (
+        <RegistrationModal 
+          isOpen={activeModal === 'registration'}
+          onClose={closeModals}
+          onSwitchToLogin={switchToLogin}
+        />
+      )}
+      
+      {shouldShowModals && activeModal === 'login' && (
+        <LoginModal 
+          isOpen={activeModal === 'login'}
+          onClose={closeModals}
+          onSwitchToRegister={switchToRegister}
+          onLoginSuccess={handleLoginSuccess} 
+        />
+      )}
     </div>
   );
 }

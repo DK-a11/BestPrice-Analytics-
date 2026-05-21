@@ -4,6 +4,7 @@ import useDebounce from '../../hooks/useDebounce';
 import useSearchHistory from '../../hooks/useSearchHistory';
 import './SearchBar.css';
 import { parseProducts } from '../../services/api';
+import { querySave } from '../../services/api';
 
 const SearchBar = ({ 
   onSearch, 
@@ -11,7 +12,8 @@ const SearchBar = ({
   onToggleStore, 
   onSelectAll, 
   onDeselectAll,
-  storesConfig = [] 
+  storesConfig = [],
+  userId = null
 }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -43,7 +45,7 @@ const SearchBar = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  //теперь передаёт selectedStores
+  
   const fetchSuggestions = async (searchQuery, stores = []) => {
     setIsLoading(true);
     try {
@@ -93,7 +95,6 @@ const SearchBar = ({
     setQuery(searchQuery);
 
     if (onSearch) {
-      // Передаём stores вторым аргументом
       onSearch(searchQuery, { stores: selectedStores });
     }
   };
@@ -110,9 +111,23 @@ const SearchBar = ({
   
     addToHistory(query);
     setShowDropdown(false);
-  
-    //Передаём stores в API-запрос
+  if (userId) {
+    console.log('📤 Вызов querySave с userId:', userId);
+    querySave({ 
+      userId,
+      query 
+    })
+    .then(result => {
+      console.log('✅ Query saved:', result);
+    })
+    .catch(error => {
+      console.error('❌ Error saving query');
+    });
+  } else {
+    console.log('⚠️ userId не передан, query не сохранён');
+  }
     fetchSuggestions(query, selectedStores);
+
   
     if (onSearch) {
       onSearch(query, { stores: selectedStores });

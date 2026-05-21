@@ -70,7 +70,7 @@ useEffect(() => {
     setInsights(mockInsights);
   };
 
-  // Здесь будет реальная загрузка данных из API (возможно все перепишу здесь)
+
 const loadAnalytics = async () => {
   setIsLoading(true);
   await delay(90000);
@@ -82,7 +82,6 @@ const loadAnalytics = async () => {
     const comparisonResponse = await extractCProducts(query);
     const insightsResponse = await extractIProducts(query);
 
-    // Достаём данные из .data
     const historyData = historyResponse.data || [];
     const comparisonData = comparisonResponse.data || [];
     const insightsData = insightsResponse.data || {};
@@ -91,7 +90,6 @@ const loadAnalytics = async () => {
     console.log('📊 Extracted comparisonData:', comparisonData);
     console.log('📊 Extracted insightsData:', insightsData);
 
-    // Обработка истории цен
     const processedHistory = historyData.map(item => ({
       date: item.date,
       Alser: Number(item.Alser) || 0,
@@ -101,14 +99,12 @@ const loadAnalytics = async () => {
 
     }));
 
-    // Обработка сравнения магазинов
     const processedComparison = comparisonData.map(item => ({
       store: item.store || 'Unknown',
       price: Number(item.price) || 0,
       color: item.color || '#8884d8'
     }));
 
-    // Обработка инсайтов
     const processedInsights = {
       averagePrice: Number(insightsData.averagePrice) || 0,
       bestPrice: {
@@ -163,7 +159,6 @@ const handleExport = async (query) => {
     link.click();
     document.body.removeChild(link);
 
-    // 🔹 Удаляем ссылку из памяти с задержкой, чтобы браузер успел начать загрузку
     setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 
   } catch (err) {

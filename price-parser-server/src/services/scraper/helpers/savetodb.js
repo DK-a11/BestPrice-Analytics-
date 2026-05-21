@@ -14,7 +14,7 @@ export async function connectDB() {
   }
 }
 
-// 🔥 Функция сохранения с поддержкой истории цен
+
 export async function saveToDB(items) {
   try {
     if (!Array.isArray(items) || items.length === 0) {
@@ -32,12 +32,10 @@ export async function saveToDB(items) {
     // Обрабатываем каждый товар индивидуально для гибкости
     for (const item of items) {
       try {
-        // Нормализуем дату парсинга
         const parsedAt = item.parsedAt 
           ? new Date(item.parsedAt) 
           : new Date(); // текущая дата, если не указана
         
-        // 🔍 Ищем существующую запись с таким же URL и датой
         const existing = await Item.findOne({ 
           url: item.url, 
           parsedAt: {

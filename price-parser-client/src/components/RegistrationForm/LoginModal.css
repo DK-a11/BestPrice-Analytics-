@@ -1,0 +1,457 @@
+/* Overlay/Backdrop - общие стили с RegistrationModal */
+.login-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  padding: 20px;
+}
+
+.login-modal-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Modal Container */
+.login-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  transform: translateY(-50px);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+}
+
+.login-modal.slide-down {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Close Button */
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f5f5f5;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.modal-close-btn:hover {
+  background: #e0e0e0;
+  color: #333;
+  transform: rotate(90deg);
+}
+
+.modal-close-btn:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Header */
+.modal-header {
+  padding: 32px 32px 24px;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Form */
+.modal-form {
+  padding: 0 32px 32px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #1a1a1a;
+  background: #fff;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+.form-input:hover {
+  border-color: #d1d5db;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.form-input.error {
+  border-color: #ef4444;
+}
+
+.form-input.error:focus {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.form-error {
+  display: block;
+  font-size: 13px;
+  color: #ef4444;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.form-error-global {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Password Input Wrapper */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper .form-input {
+  padding-right: 48px;
+  width: 100%;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  z-index: 1;
+}
+
+.password-toggle-btn:hover {
+  color: #6b7280;
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  color: #10b981;
+}
+
+/* Forgot Password Link */
+.forgot-password {
+  text-align: right;
+  margin-top: 8px;
+}
+
+.forgot-password-link {
+  font-size: 13px;
+  color: #10b981;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.forgot-password-link:hover {
+  color: #059669;
+  text-decoration: underline;
+}
+
+/* Buttons */
+.form-actions {
+  margin-top: 28px;
+}
+
+.btn {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Modal Switch (Register/Login toggle) */
+.modal-switch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.switch-text {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.switch-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  color: #10b981;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-family: inherit;
+}
+
+.switch-link:hover {
+  color: #059669;
+  text-decoration: underline;
+}
+
+.switch-link:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbar Styling */
+.login-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.login-modal::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0 16px 16px 0;
+}
+
+.login-modal::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.login-modal::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .login-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .login-modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 20px 20px 0 0;
+    transform: translateY(100%);
+  }
+
+  .login-modal.slide-down {
+    transform: translateY(0);
+  }
+
+  .modal-header {
+    padding: 24px 24px 20px;
+  }
+
+  .modal-title {
+    font-size: 24px;
+  }
+
+  .modal-form {
+    padding: 0 24px 24px;
+  }
+
+  .form-actions {
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 380px) {
+  .modal-header {
+    padding: 20px 20px 16px;
+  }
+
+  .modal-form {
+    padding: 0 20px 20px;
+  }
+
+  .modal-title {
+    font-size: 22px;
+  }
+
+  .form-input {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .login-modal-overlay,
+  .login-modal {
+    transition: none;
+  }
+
+  .login-modal-overlay.visible {
+    opacity: 1;
+  }
+
+  .login-modal {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Dark Mode Support */
+/*@media (prefers-color-scheme: dark) {
+  .login-modal {
+    background: #1f2937;
+  }
+
+  .modal-title {
+    color: #f9fafb;
+  }
+
+  .modal-subtitle {
+    color: #9ca3af;
+  }
+
+  .form-label {
+    color: #e5e7eb;
+  }
+
+  .form-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+
+  .form-input::placeholder {
+    color: #6b7280;
+  }
+
+  .form-input:hover {
+    border-color: #6b7280;
+  }
+
+  .form-error-global {
+    background: #451a1a;
+    border-color: #7f1d1d;
+  }
+
+  .forgot-password-link {
+    color: #34d399;
+  }
+
+  .forgot-password-link:hover {
+    color: #6ee7b7;
+  }
+
+  .switch-text {
+    color: #9ca3af;
+  }
+
+  .switch-link {
+    color: #34d399;
+  }
+
+  .switch-link:hover {
+    color: #6ee7b7;
+  }
+
+  .modal-switch {
+    border-top-color: #4b5563;
+  }
+}*/

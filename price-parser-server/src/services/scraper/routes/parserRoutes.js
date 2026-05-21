@@ -16,10 +16,9 @@ router.post('/parse', async (req, res, next) => {
       return res.status(400).json({ error: 'Поле "query" обязательно и должно быть строкой' });
     }
 
-    // Нормализация pages (оставляем как в старом коде - без parseInt, если парсеры ждут undefined)
+    // Нормализация pages оставил как в прошлый раз, смотри первоначальный файл
     const pagesNum = pages; 
 
-    // 🔥 Определяем, какие магазины парсить
     const requestedStores = Array.isArray(stores) && stores.length > 0 
       ? stores.map(s => String(s).toLowerCase()) 
       : null; // null = парсить все
@@ -27,7 +26,6 @@ router.post('/parse', async (req, res, next) => {
     const allResults = [];
     const errors = [];
 
-    // 🔥 Вспомогательная функция для безопасного запуска одного парсера
     const runParser = async (storeName, parserFn) => {
       // Если запрошены конкретные магазины и текущего нет в списке — пропускаем
       if (requestedStores && !requestedStores.includes(storeName.toLowerCase())) {
@@ -36,7 +34,6 @@ router.post('/parse', async (req, res, next) => {
 
       try {
         console.log(`🔄 Запуск ${storeName}...`);
-        // 🔥 ПРЯМОЙ вызов функции — как в старом рабочем коде!
         const result = await parserFn(query, pagesNum);
         
         // Защита от не-массива
@@ -53,7 +50,6 @@ router.post('/parse', async (req, res, next) => {
       }
     };
 
-    // 🔥 Последовательный запуск — ТОЧНО как в старом коде
     await runParser('Alser', parseAlser);
     await delay(4500);
     
@@ -64,9 +60,7 @@ router.post('/parse', async (req, res, next) => {
     await delay(4500);
     
     await runParser('Alfa', parseAlfa);
-    // Задержка после последнего не нужна
 
-    // Лог итогов
     console.log(`📦 Итого: ${allResults.length} товаров из ${requestedStores || 'всех'} магазинов`);
 
     res.status(200).json({ 

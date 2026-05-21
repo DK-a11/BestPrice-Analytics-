@@ -268,3 +268,61 @@ code {
 }
 .chip-status.on { color: #10b981; }
 .chip-status.off { color: #ef4444; }
+
+/* Общие стили для переключателя между формами */
+.modal-switch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.switch-text {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.switch-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  color: #10b981;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-family: inherit;
+}
+
+.switch-link:hover {
+  color: #059669;
+  text-decoration: underline;
+}
+
+.switch-link:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Dark mode для переключателя */
+@media (prefers-color-scheme: dark) {
+  .modal-switch {
+    border-top-color: #4b5563;
+  }
+  
+  .switch-text {
+    color: #9ca3af;
+  }
+  
+  .switch-link {
+    color: #34d399;
+  }
+  
+  .switch-link:hover {
+    color: #6ee7b7;
+  }
+}

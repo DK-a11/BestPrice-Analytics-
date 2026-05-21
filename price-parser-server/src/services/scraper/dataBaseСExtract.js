@@ -3,12 +3,10 @@ import Item from '../../models/items.js';
 
 mongoose.connect('mongodb://localhost:27017/PriceParserDB');
 
-// 🔧 Вспомогательная функция для экранирования спецсимволов в regex
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// 🎨 Фиксированная палитра цветов для магазинов
 const STORE_COLORS = {
   'alser': '#10B981',
   'sulpak': '#f59e0b',
@@ -16,7 +14,6 @@ const STORE_COLORS = {
   'kaspi': '#f54545'
 };
 
-// 🔁 Фоллбэк-цвета для магазинов, не указанных в палитре
 const FALLBACK_COLORS = ['#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0'];
 
 export async function getItemsByTitle(query) {
@@ -30,15 +27,13 @@ export async function getItemsByTitle(query) {
       return [];
     }
 
-    // Создаем массив условий $regex для каждого слова с экранированием спецсимволов
     const searchConditions = words.map(word => ({
-      title: { $regex: escapeRegExp(word), $options: 'i' } // 'i' — регистронезависимый поиск
+      title: { $regex: escapeRegExp(word), $options: 'i' } 
     }));
     
-    // 🔍 Поиск: все слова из запроса должны присутствовать в title (логическое И)
     const items = await Item.find({
       $and: searchConditions
-    }).lean(); // .lean() ускоряет ответ, возвращая чистые JS-объекты
+    }).lean(); 
     
     console.log(`Найдено ${items.length} товаров по запросу "${query}" (слова: ${words.join(', ')})`);
 

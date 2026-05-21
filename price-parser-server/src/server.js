@@ -9,6 +9,9 @@ import analyticsHistRoutes from './services/scraper/routes/analyticsHistRoutes.j
 import analyticsInsightRoutes from './services/scraper/routes/analyticsInsightRoutes.js'; 
 import analyticstRoutes from './services/scraper/routes/analyticsRoutes.js'; 
 import productExportRoutes from './services/scraper/routes/productExport.js';
+import userRoutes from './services/scraper/routes/userRoutes.js';
+import authRoutes from './services/scraper/routes/authRoutes.js';
+import querySaveRoutes from './services/scraper/routes/querySaveRoutes.js';
 
 dotenv.config();
 const app = express(); // Разрешаем CORS для нашего фронтенда
@@ -18,7 +21,9 @@ const weburl = `https://dismay-bonanza-duo.ngrok-free.dev/tg-app?query=`;
 const ALLOWED_ORIGINS = [
   'https://dismay-bonanza-duo.ngrok-free.dev',
   'https://dismay-bonanza-duo.ngrok-free.dev/tg-app',     // Домен, где лежит Telegram Web App
-  'http://localhost:5173',  
+  'http://localhost:5173', 
+  'https://best-price-analytics-ear7-m5a4iacg9-dk-a11-s-projects.vercel.app',
+  'https://best-price-analytics-ear7.vercel.app'
            
 ];
 
@@ -108,6 +113,9 @@ async function startServer() {
   app.use('/api', analyticsInsightRoutes);
   app.use('/api', analyticstRoutes);
   app.use('/api', productExportRoutes);
+  app.use('/api', userRoutes); 
+  app.use('/api', authRoutes); 
+  app.use('/api', querySaveRoutes);
 
 
   app.listen(4200, () => {

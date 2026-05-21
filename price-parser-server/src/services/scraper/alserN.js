@@ -34,7 +34,7 @@ const matchesQueryWords = (title, query, threshold = 0.6) => {
   return matchedCount / queryWords.length >= threshold;
 };
 
-// 🔹 Основная функция парсинга (чистая, импортируемая)
+
 export async function parseAlser(query, pages = 1) {
   const allResults = [];
 
@@ -43,7 +43,6 @@ export async function parseAlser(query, pages = 1) {
     
     const pageContent = await getPuppeteerPage(url);
     
-    // 🔹 Логирование для отладки (можно убрать в продакшене или заменить на winston)
     console.log('📊 Alser загрузка:', {
       url: pageContent.url,
       title: pageContent.title,
@@ -62,10 +61,8 @@ export async function parseAlser(query, pages = 1) {
 
       const category = extractCategoryFromUrl(link);
 
-      // 🔹 Заменяем старую проверку на новую, с порогом 0.6 (можно настроить)
       const matchesQuery = matchesQueryWords(title, query, 0.6);
 
-      // 🔹 Фильтруем только релевантные товары + защита от пустых значений
       if (matchesQuery) {
         queryItems.push({ 
           store,
