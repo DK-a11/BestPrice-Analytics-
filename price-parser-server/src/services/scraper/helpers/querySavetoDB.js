@@ -24,21 +24,21 @@ export const connectDatabase = async () => {
       });
 
       _isDbConnected = true;
-      console.log(`✅ [QueryDB] MongoDB connected: ${mongoose.connection.host}`);
+      console.log(`[QueryDB] MongoDB connected: ${mongoose.connection.host}`);
 
       mongoose.connection.on('error', (err) => {
-        console.error('❌ [QueryDB] Connection error:', err.message);
+        console.error('[QueryDB] Connection error:', err.message);
         _isDbConnected = false;
       });
 
       mongoose.connection.on('disconnected', () => {
-        console.warn('⚠️ [QueryDB] Disconnected');
+        console.warn('[QueryDB] Disconnected');
         _isDbConnected = false;
       });
 
       return true;
     } catch (error) {
-      console.error('❌ [QueryDB] Connection failed:', error.message);
+      console.error('[QueryDB] Connection failed:', error.message);
       _dbConnectionPromise = null;
       throw error;
     }
@@ -55,10 +55,8 @@ export const isDatabaseConnected = () => {
 
 export const saveUserQuery = async ({ userId, query }) => {
   try {
-    // 🔹 0. Гарантируем подключение к БД
     await connectDatabase();
 
-    // 🔹 1. Валидация входных данных
     if (!userId || !query) {
       const error = new Error('User ID and query text are required');
       error.code = 'MISSING_PARAMS';
@@ -66,7 +64,6 @@ export const saveUserQuery = async ({ userId, query }) => {
       throw error;
     }
 
-    // 🔹 2. Валидация формата userId (MongoDB ObjectId)
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       const error = new Error('Invalid user ID format');
       error.code = 'INVALID_USER_ID';
@@ -74,7 +71,6 @@ export const saveUserQuery = async ({ userId, query }) => {
       throw error;
     }
 
-    // 🔹 3. Очистка и валидация текста запроса
     const trimmedQuery = query.trim();
     if (trimmedQuery.length === 0 || trimmedQuery.length > 500) {
       const error = new Error('Query must be between 1 and 500 characters');
@@ -85,7 +81,6 @@ export const saveUserQuery = async ({ userId, query }) => {
 
     console.log('[QueryService] Сохранение запроса:', { userId, query: trimmedQuery });
 
-    // 🔹 4. Поиск пользователя в базе
     const user = await User.findById(userId).exec();
 
     if (!user) {
@@ -111,7 +106,7 @@ export const saveUserQuery = async ({ userId, query }) => {
     const newQuery = new Query(queryData);
     await newQuery.save();
 
-    console.log('[QueryService] ✅ Запрос сохранён:', newQuery._id);
+    console.log('[QueryService] Запрос сохранён:', newQuery._id);
 
     return newQuery.getPublicData 
       ? newQuery.getPublicData() 

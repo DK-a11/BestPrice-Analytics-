@@ -3,19 +3,12 @@ import { getProductsByQuery } from '../dataBaseExtract.js';
 
 const router = express.Router();
 
-/**
- * @route   GET /api/analytics/products
- * @desc    Получить агрегированные данные о товарах по названию (query)
- * @access  Public
- * @query   {String} query - Обязательный параметр: название товара для поиска
- * 
- * @example GET /api/analytics/products?query=iphone
- */
+
 router.get('/analytics/products', async (req, res) => {
   try {
-    const { query } = req.query;
+    const { query, stores } = req.query;
     
-    // Валидация входного параметра
+    // Валидация обязательного параметра
     if (!query) {
       return res.status(400).json({
         success: false,
@@ -24,11 +17,29 @@ router.get('/analytics/products', async (req, res) => {
       });
     }
 
-    const data = await getProductsByQuery(query.trim());
+    // 🔥 Надёжный парсинг параметра stores
+    let storesArray = [];
+    if (stores) {
+      storesArray = Array.isArray(stores)
+        ? stores.map(s => String(s).trim().toLowerCase())
+        : stores.split(',').map(s => s.trim().toLowerCase());
+      storesArray = storesArray.filter(Boolean);
+    }
+
+    console.log('📥 [products] received:', { 
+      query, 
+      storesRaw: stores, 
+      parsedStores: storesArray,
+      isFilterActive: storesArray.length > 0 
+    });
+
+    // Передаём stores в сервисную функцию
+    const data = await getProductsByQuery(query.trim(), { stores: storesArray });
     
     return res.status(200).json({
       success: true,
       query,
+      storesFiltered: storesArray.length > 0 ? storesArray : 'all',
       count: data.length,
       data
     });

@@ -204,14 +204,14 @@ function MainApp() {
         {/* Блок 2: Аналитика */}
         <section id="analytics" className="py-16 bg-white">
           <div className="container mx-auto px-4">
-            <AnalyticsBlock productId={selectedProductId} query={searchQuery} />
+            <AnalyticsBlock productId={selectedProductId} query={searchQuery} selectedStores={selectedStores}/>
           </div>
         </section>
 
         {/* Блок 3: Популярные товары */}
         <section id="popular" className="py-16 bg-primary-white">
           <div className="container mx-auto px-4">
-            <PopularProductsBlock query={searchQuery} />
+            <PopularProductsBlock query={searchQuery} selectedStores={selectedStores}/>
           </div>
         </section>
 

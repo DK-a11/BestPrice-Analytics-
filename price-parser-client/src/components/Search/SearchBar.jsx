@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiSearch, FiX, FiClock, FiTrendingUp } from 'react-icons/fi';
 import useDebounce from '../../hooks/useDebounce';
-import useSearchHistory from '../../hooks/useSearchHistory';
 import './SearchBar.css';
-import { parseProducts } from '../../services/api';
-import { querySave } from '../../services/api';
+import { parseProducts, querySave, getUserHistory, clearUserHistory } from '../../services/api';
 
 const SearchBar = ({ 
   onSearch, 
@@ -20,12 +18,24 @@ const SearchBar = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  
+  // 🔥 Состояние истории (загружается с бэкенда)
+  const [history, setHistory] = useState([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   const debouncedQuery = useDebounce(query, 300);
-  const { history, addToHistory, clearHistory } = useSearchHistory();
   const searchRef = useRef(null);
 
-  // Подсказки при вводе
+  // 🔥 Загрузка истории при изменении userId
+  useEffect(() => {
+    if (userId) {
+      loadUserHistory(userId);
+    } else {
+      setHistory([]);
+    }
+  }, [userId]);
+
+  // 🔥 Загрузка подсказок при вводе
   useEffect(() => {
     if (debouncedQuery.length >= 2) {
       updateLocalSuggestions(debouncedQuery);
@@ -34,7 +44,6 @@ const SearchBar = ({
     }
   }, [debouncedQuery]);
 
-  // Закрыть dropdown при клике вне
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -45,11 +54,62 @@ const SearchBar = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  
+  const loadUserHistory = async (uid) => {
+    setIsHistoryLoading(true);
+    try {
+      const data = await getUserHistory(uid);
+      // Ожидаем массив строк или объектов { query: "..." }
+      const queries = data.map(item => 
+        typeof item === 'string' ? item : item.query
+      );
+      setHistory(queries);
+    } catch (error) {
+      console.error('❌ Error loading history:', error);
+      setHistory([]);
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
+
+  const addToHistory = async (searchQuery) => {
+    if (!searchQuery?.trim()) return;
+    
+    const trimmed = searchQuery.trim();
+    
+    // Локальное обновление: убираем дубли, добавляем в начало, лимит 50
+    setHistory(prev => {
+      const filtered = prev.filter(item => 
+        item.toLowerCase() !== trimmed.toLowerCase()
+      );
+      return [trimmed, ...filtered].slice(0, 50);
+    });
+
+    // Сохранение на бэкенд
+    if (userId) {
+      try {
+        await querySave({ userId, query: trimmed });
+      } catch (err) {
+        console.error('❌ Failed to save query to DB:', err);
+      }
+    }
+  };
+
+  const clearHistory = async () => {
+    setHistory([]); // мгновенная очистка UI
+    if (userId) {
+      try {
+        await clearUserHistory(userId);
+      } catch (error) {
+        console.error('❌ Error clearing history:', error);
+        // Откат: перезагружаем историю при ошибке
+        loadUserHistory(userId);
+      }
+    }
+  };
+
   const fetchSuggestions = async (searchQuery, stores = []) => {
     setIsLoading(true);
     try {
-      // Передаём stores в API-сервис
       const response = await parseProducts(searchQuery, { stores });
       // Если нужно — обработайте response здесь
     } catch (error) {
@@ -82,9 +142,8 @@ const SearchBar = ({
     }
   };
 
-  //теперь передаёт stores в onSearch
   const handleSearch = (searchQuery) => {
-    if (searchQuery.trim() === '') return;
+    if (!searchQuery?.trim()) return;
     if (selectedStores.length === 0) {
       alert('Выберите хотя бы один магазин для поиска');
       return;
@@ -99,35 +158,20 @@ const SearchBar = ({
     }
   };
 
-  //теперь handleSubmit тоже передаёт stores
+  // 🔥 Обработчик отправки формы
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (query.trim() === '') return;
+    if (!query?.trim()) return;
     if (selectedStores.length === 0) {
       alert('Выберите хотя бы один магазин для поиска');
       return;
     }
   
-    addToHistory(query);
+    addToHistory(query); // уже сохраняет и локально, и в БД
     setShowDropdown(false);
-  if (userId) {
-    console.log('📤 Вызов querySave с userId:', userId);
-    querySave({ 
-      userId,
-      query 
-    })
-    .then(result => {
-      console.log('✅ Query saved:', result);
-    })
-    .catch(error => {
-      console.error('❌ Error saving query');
-    });
-  } else {
-    console.log('⚠️ userId не передан, query не сохранён');
-  }
-    fetchSuggestions(query, selectedStores);
-
+    
+    //fetchSuggestions(query, selectedStores);
   
     if (onSearch) {
       onSearch(query, { stores: selectedStores });
@@ -149,7 +193,8 @@ const SearchBar = ({
   };
 
   const handleKeyDown = (e) => {
-    const items = query.length >= 2 ? suggestions : history;
+    // Источники для навигации: подсказки или история
+    const items = query.length >= 2 && suggestions.length > 0 ? suggestions : history;
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -157,7 +202,7 @@ const SearchBar = ({
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+    } else if (e.key === 'Enter' && selectedIndex >= 0 && items[selectedIndex]) {
       e.preventDefault();
       const selectedItem = items[selectedIndex];
       const selectedText = typeof selectedItem === 'string' ? selectedItem : selectedItem.text;
@@ -167,7 +212,9 @@ const SearchBar = ({
     }
   };
 
+  // 🔥 Рендер контента выпадающего списка
   const renderDropdownContent = () => {
+    // Показ подсказок при вводе от 2 символов
     if (query.length >= 2 && suggestions.length > 0) {
       return (
         <div className="dropdown-section">
@@ -192,28 +239,43 @@ const SearchBar = ({
       );
     }
 
-    if (query.length < 2 && history.length > 0) {
-      return (
-        <div className="dropdown-section">
-          <div className="dropdown-header">
-            <FiClock className="section-icon" />
-            <span>История поиска</span>
-            <button onClick={clearHistory} className="clear-history-btn">
-              Очистить
-            </button>
+    // Показ истории, когда запрос короткий или пустой
+    if (query.length < 2) {
+      if (isHistoryLoading) {
+        return (
+          <div className="dropdown-section">
+            <div className="dropdown-item disabled">Загрузка истории...</div>
           </div>
-          {history.map((item, index) => (
-            <div
-              key={index}
-              className={`dropdown-item ${index === selectedIndex ? 'selected' : ''}`}
-              onClick={() => handleSearch(item)}
-            >
-              <FiClock className="item-icon" />
-              <span className="item-text">{item}</span>
+        );
+      }
+      
+      if (history.length > 0) {
+        return (
+          <div className="dropdown-section">
+            <div className="dropdown-header">
+              <FiClock className="section-icon" />
+              <span>История поиска</span>
+              <button 
+                type="button"
+                onClick={clearHistory} 
+                className="clear-history-btn"
+              >
+                Очистить
+              </button>
             </div>
-          ))}
-        </div>
-      );
+            {history.map((item, index) => (
+              <div
+                key={`hist-${index}`}
+                className={`dropdown-item ${index === selectedIndex ? 'selected' : ''}`}
+                onClick={() => handleSearch(item)}
+              >
+                <FiClock className="item-icon" />
+                <span className="item-text">{item}</span>
+              </div>
+            ))}
+          </div>
+        );
+      }
     }
 
     return null;
@@ -222,7 +284,7 @@ const SearchBar = ({
   return (
     <div className="search-bar-container" ref={searchRef}>
       <form onSubmit={handleSubmit} className="search-form">
-        {/* 🔥 Блок кнопок магазинов — рендерим, если переданы конфиг и обработчики */}
+        {/* 🔥 Блок кнопок магазинов */}
         {storesConfig.length > 0 && onToggleStore && (
           <div className="store-toggles">
             <div className="store-toggles-header">
@@ -259,6 +321,7 @@ const SearchBar = ({
           </div>
         )}
 
+        {/* 🔥 Поле ввода */}
         <div className="search-input-wrapper">
           <FiSearch className={`search-icon ${isLoading ? 'pulse' : ''}`} />
           
@@ -270,6 +333,7 @@ const SearchBar = ({
             onKeyDown={handleKeyDown}
             placeholder="Введите название товара..."
             className="search-input"
+            autoComplete="off"
           />
 
           {query && (
@@ -284,7 +348,8 @@ const SearchBar = ({
           )}
         </div>
 
-        {showDropdown && (query.length >= 2 || history.length > 0) && (
+        {/* 🔥 Выпадающий список */}
+        {showDropdown && (query.length >= 2 || history.length > 0 || isHistoryLoading) && (
           <div className="search-dropdown fade-in">
             {renderDropdownContent()}
           </div>

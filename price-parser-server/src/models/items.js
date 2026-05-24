@@ -11,7 +11,6 @@ const itemSchema = new mongoose.Schema({
   parsedAt: { type: Date, default: Date.now, index: true }
 }, { timestamps: true });
 
-// Уникальный индекс по title и link для предотвращения дубликатов
 itemSchema.index({ title: 1, link: 1 }, { unique: true });
 
 itemSchema.virtual('parsedDate').get(function() {

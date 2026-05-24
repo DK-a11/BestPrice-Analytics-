@@ -4,8 +4,8 @@ import { getPriceInsights, getStoreComparison } from '../dataBaseIExtract.js';
 const router = express.Router();
 
 /**
- * @route   GET /api/analytics/insights?query=iphone&category=electronics
- * @desc    Получение инсайтов по товару: средняя цена, лучшее предложение, рекомендация
+ * @route   GET /api/analytics/insights?query=iphone&stores=alser,kaspi
+ * @desc    Получение инсайтов по товару с фильтрацией по магазинам
  * @access  Public
  */
 router.get('/analytics/insights', async (req, res, next) => {
@@ -27,10 +27,21 @@ router.get('/analytics/insights', async (req, res, next) => {
       });
     }
 
-    // 🔄 Парсинг параметра stores из строки в массив
-    const storesArray = stores && typeof stores === 'string'
-      ? stores.split(',').map(s => s.trim())
-      : [];
+    // 🔥 Надёжный парсинг параметра stores (как в comparison)
+    let storesArray = [];
+    if (stores) {
+      storesArray = Array.isArray(stores)
+        ? stores.map(s => String(s).trim().toLowerCase())
+        : stores.split(',').map(s => s.trim().toLowerCase());
+      storesArray = storesArray.filter(Boolean);
+    }
+
+    console.log('📥 Insights route received:', { 
+      query, 
+      storesRaw: stores, 
+      parsedStores: storesArray,
+      isFilterActive: storesArray.length > 0 
+    });
 
     const insights = await getPriceInsights({
       query: query.toLowerCase(),
@@ -50,10 +61,11 @@ router.get('/analytics/insights', async (req, res, next) => {
     }
 
     console.log('✅ Insights retrieved:', insights);
-    // ✅ Успешный ответ
+    
     res.json({
       success: true,
-      data: insights
+      data: insights,
+      meta: { storesFiltered: storesArray.length > 0 ? storesArray : 'all' }
     });
 
   } catch (error) {
@@ -63,13 +75,13 @@ router.get('/analytics/insights', async (req, res, next) => {
 });
 
 /**
- * @route   GET /api/analytics/insights/comparison?query=iphone
- * @desc    Сравнение цен по всем магазинам (для таблицы/графика)
+ * @route   GET /api/analytics/insights/comparison?query=iphone&stores=alser,kaspi
+ * @desc    Сравнение цен по всем магазинам с фильтрацией
  * @access  Public
  */
 router.get('/insights/comparison', async (req, res, next) => {
   try {
-    const { query, category } = req.query;
+    const { query, category, stores } = req.query;
 
     if (!query) {
       return res.status(400).json({
@@ -78,15 +90,26 @@ router.get('/insights/comparison', async (req, res, next) => {
       });
     }
 
+    // 🔥 Парсинг stores для этого эндпоинта тоже
+    let storesArray = [];
+    if (stores) {
+      storesArray = Array.isArray(stores)
+        ? stores.map(s => String(s).trim().toLowerCase())
+        : stores.split(',').map(s => s.trim().toLowerCase());
+      storesArray = storesArray.filter(Boolean);
+    }
+
     const comparison = await getStoreComparison({
       query: query.toLowerCase(),
-      category
+      category,
+      stores: storesArray  // 🔥 Передаём фильтр в сервис
     });
 
     res.json({
       success: true,
       count: comparison.length,
-      data: comparison
+      data: comparison,
+      meta: { storesFiltered: storesArray.length > 0 ? storesArray : 'all' }
     });
 
   } catch (error) {
@@ -102,7 +125,7 @@ router.get('/insights/comparison', async (req, res, next) => {
  */
 router.get('/insights/quick', async (req, res, next) => {
   try {
-    const { query } = req.query;
+    const { query, stores } = req.query;
 
     if (!query) {
       return res.status(400).json({
@@ -111,7 +134,19 @@ router.get('/insights/quick', async (req, res, next) => {
       });
     }
 
-    const insights = await getPriceInsights({ query: query.toLowerCase() });
+    // Парсинг stores для quick-эндпоинта
+    let storesArray = [];
+    if (stores) {
+      storesArray = Array.isArray(stores)
+        ? stores.map(s => String(s).trim().toLowerCase())
+        : stores.split(',').map(s => s.trim().toLowerCase());
+      storesArray = storesArray.filter(Boolean);
+    }
+
+    const insights = await getPriceInsights({ 
+      query: query.toLowerCase(),
+      stores: storesArray 
+    });
 
     if (!insights) {
       return res.status(404).json({
@@ -121,14 +156,14 @@ router.get('/insights/quick', async (req, res, next) => {
       });
     }
 
-    // 🎯 Возвращаем только ключевые поля для быстрого отображения
     res.json({
       success: true,
       data: {
         averagePrice: insights.averagePrice,
         bestPrice: insights.bestPrice,
         priceChange: insights.priceChange
-      }
+      },
+      meta: { storesFiltered: storesArray.length > 0 ? storesArray : 'all' }
     });
 
   } catch (error) {
@@ -137,7 +172,7 @@ router.get('/insights/quick', async (req, res, next) => {
   }
 });
 
-// 🛡️ Global error handler для этого роутера
+// 🛡️ Global error handler
 router.use((err, req, res, next) => {
   console.error('❌ Analytics Insight Route Error:', err);
   

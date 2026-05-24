@@ -11,12 +11,9 @@ router.post('/query', express.json(), async (req, res) => {
       body: { ...req.body, query: req.body.query?.substring(0, 50) + '...' },
     });
 
-    // 🔹 1. Извлечение и нормализация параметров
-    // Поддерживаем как "Id" (из спецификации), так и "userId"
     const userId = req.body.Id || req.body.userId;
     const { query } = req.body;
 
-    // 🔹 2. Базовая валидация
     if (!userId || !query) {
       return res.status(400).json({
         success: false,
@@ -24,10 +21,8 @@ router.post('/query', express.json(), async (req, res) => {
       });
     }
 
-    // 🔹 3. Вызов сервиса для сохранения запроса
     const savedQuery = await saveUserQuery({ userId, query });
 
-    // 🔹 4. Успешный ответ согласно спецификации
     return res.status(201).json({
       success: true,
       message: 'Query saved successfully',
@@ -35,7 +30,6 @@ router.post('/query', express.json(), async (req, res) => {
     });
 
   } catch (error) {
-    // 🔹 5. Обработка ошибок: пользователь не найден (404)
     if (error.code === 'USER_NOT_FOUND') {
       return res.status(404).json({
         success: false,
@@ -43,7 +37,6 @@ router.post('/query', express.json(), async (req, res) => {
       });
     }
 
-    // 🔹 6. Обработка ошибок валидации (400)
     if (['MISSING_PARAMS', 'INVALID_USER_ID', 'INVALID_QUERY_LENGTH', 'VALIDATION_ERROR'].includes(error.code)) {
       return res.status(400).json({
         success: false,
@@ -51,7 +44,6 @@ router.post('/query', express.json(), async (req, res) => {
       });
     }
 
-    // 🔹 7. Обработка ошибок базы данных (503)
     if (error.code === 'DATABASE_ERROR') {
       return res.status(503).json({
         success: false,
@@ -59,7 +51,6 @@ router.post('/query', express.json(), async (req, res) => {
       });
     }
 
-    // 🔹 8. Логирование и ответ для непредвиденных ошибок (500)
     console.error('[QueryRoute] Unhandled error:', {
       message: error.message,
       code: error.code,
@@ -75,12 +66,7 @@ router.post('/query', express.json(), async (req, res) => {
   }
 });
 
-/**
- * @route   GET /api/querys/history/:userId
- * @desc    Получение истории запросов пользователя
- * @access  Public
- * @query   { limit?: number, skip?: number }
- */
+
 router.get('/history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -113,12 +99,7 @@ router.get('/history/:userId', async (req, res) => {
   }
 });
 
-/**
- * @route   GET /api/querys/search/:userId
- * @desc    Поиск по истории запросов пользователя
- * @access  Public
- * @query   { q: string } - поисковый термин
- */
+
 router.get('/search/:userId', async (req, res) => {
   try {
     const { userId } = req.params;

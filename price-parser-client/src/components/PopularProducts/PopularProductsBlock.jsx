@@ -13,7 +13,7 @@ const CATEGORIES = [
   { id: 'accessories', name: 'Аксессуары', icon: '🕶️' },
 ];
 
-const PopularProductsBlock = ({ query }) => {
+const PopularProductsBlock = ({ query, selectedStores = [] }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [products, setProducts] = useState([]);
   const [stores, setStores] = useState([]);
@@ -103,7 +103,7 @@ const PopularProductsBlock = ({ query }) => {
         },
       ];
 
-      const productsresponse = await extractProducts(query); 
+      const productsresponse = await extractProducts(query, { stores: selectedStores });
 
       const productsData = productsresponse.data || [];
 

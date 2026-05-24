@@ -4,7 +4,6 @@ import { getProductsByQuery } from '../dataBaseExtract.js';
 
 const router = express.Router();
 
-// 🔒 Здесь добавьте проверку авторизации/прав
 router.get('/products/export', async (req, res) => {
   try {
     // 1. Получаем данные (замените на реальный запрос к БД)
@@ -15,6 +14,7 @@ router.get('/products/export', async (req, res) => {
     }
 
     const data = await getProductsByQuery(query.trim());
+    console.log('Данные для экспорта:', data);
 
     // 2. Создаём книгу
     const workbook = new ExcelJS.Workbook();

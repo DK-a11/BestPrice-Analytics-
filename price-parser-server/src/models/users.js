@@ -60,7 +60,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// 🔗 Виртуальное поле: история запросов пользователя (для populate)
 userSchema.virtual('queryHistory', {
   ref: 'Query',
   localField: '_id',

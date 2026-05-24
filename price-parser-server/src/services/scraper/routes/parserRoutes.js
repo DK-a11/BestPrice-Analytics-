@@ -33,19 +33,19 @@ router.post('/parse', async (req, res, next) => {
       }
 
       try {
-        console.log(`🔄 Запуск ${storeName}...`);
+        console.log(`Запуск ${storeName}...`);
         const result = await parserFn(query, pagesNum);
         
         // Защита от не-массива
         if (Array.isArray(result)) {
           const enriched = result.map(item => ({ ...item, source: storeName.toLowerCase() }));
           allResults.push(...enriched);
-          console.log(`✅ ${storeName}: +${result.length} товаров`);
+          console.log(`${storeName}: +${result.length} товаров`);
         } else {
-          console.warn(`⚠️ ${storeName} вернул не массив:`, typeof result);
+          console.warn(`${storeName} вернул не массив:`, typeof result);
         }
       } catch (err) {
-        console.error(`❌ Ошибка ${storeName}:`, err.message);
+        console.error(`Ошибка ${storeName}:`, err.message);
         errors.push({ shop: storeName.toLowerCase(), error: err.message });
       }
     };
@@ -72,7 +72,7 @@ router.post('/parse', async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error('💥 Глобальная ошибка:', error);
+    console.error('Глобальная ошибка:', error);
     next(error);
   }
 });

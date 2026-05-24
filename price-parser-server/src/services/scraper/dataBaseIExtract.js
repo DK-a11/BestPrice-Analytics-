@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Item from '../../models/items.js';
 
+// 🔥 Подключение к БД — как в оригинале
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/PriceParserDB';
 
 export const connectDB = async () => {
@@ -43,6 +44,9 @@ const capitalizeStore = (store) => {
   return store.charAt(0).toUpperCase() + store.slice(1).toLowerCase();
 };
 
+/**
+ * Получение аналитических инсайтов с поддержкой фильтрации по магазинам
+ */
 export const getPriceInsights = async ({
   query,
   category = 'all',
@@ -65,9 +69,18 @@ export const getPriceInsights = async ({
       if (endDate) filter.parsedAt.$lte = new Date(endDate);
     }
     
+    // 🔥 Фильтрация по магазинам с case-insensitive regex (как в comparison)
     if (Array.isArray(stores) && stores.length > 0) {
-      filter.store = { $in: stores.map(s => s.toLowerCase()) };
+      console.log('🏪 Applying store filter for insights:', stores);
+      
+      // Используем регексы без жёстких границ ^$ для устойчивости к пробелам/регистру
+      const storeRegexes = stores.map(s => new RegExp(escapeRegex(s.trim()), 'i'));
+      filter.store = { $in: storeRegexes };
     }
+
+    // 🔍 Отладка: сколько товаров находится по названию?
+    const titleMatchCount = await Item.countDocuments(titleFilter);
+    console.log(`📊 Items matching title "${query}": ${titleMatchCount}`);
 
     const uniqueProducts = await Item.aggregate([
       { $match: filter },
@@ -84,6 +97,14 @@ export const getPriceInsights = async ({
       },
       { $replaceRoot: { newRoot: '$latestDoc' } }
     ]);
+
+    console.log(`✅ After store filter: ${uniqueProducts.length} unique products`);
+
+    // 🔍 Если 0 результатов и фильтр активен — покажем какие магазины есть в БД
+    if (uniqueProducts.length === 0 && stores.length > 0) {
+      const actualStores = await Item.distinct('store', titleFilter);
+      console.warn('⚠️ Store filter returned 0 results. Actual stores in DB:', actualStores);
+    }
 
     if (!uniqueProducts || uniqueProducts.length === 0) return null;
 
@@ -169,7 +190,10 @@ export const getPriceInsights = async ({
   }
 };
 
-export const getStoreComparison = async ({ query, category = 'all' } = {}) => {
+/**
+ * Сравнение цен по магазинам с поддержкой фильтрации
+ */
+export const getStoreComparison = async ({ query, category = 'all', stores = [] } = {}) => {
   try {
     if (!query) return [];
 
@@ -178,6 +202,13 @@ export const getStoreComparison = async ({ query, category = 'all' } = {}) => {
 
     const filter = { ...titleFilter };
     if (category && category !== 'all') filter.category = category;
+
+    // 🔥 Фильтрация по магазинам
+    if (Array.isArray(stores) && stores.length > 0) {
+      console.log('🏪 Applying store filter for comparison:', stores);
+      const storeRegexes = stores.map(s => new RegExp(escapeRegex(s.trim()), 'i'));
+      filter.store = { $in: storeRegexes };
+    }
 
     const latestRecords = await Item.aggregate([
       { $match: filter },

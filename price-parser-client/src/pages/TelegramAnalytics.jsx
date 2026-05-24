@@ -33,7 +33,7 @@ function TelegramAnalytics() {
       <main className="container mx-auto px-4 py-6">
         <AnalyticsBlock 
           productId={'demo-product-1'} 
-          query={queryFromChat}  // ✅ Передаём текст из чата
+          query={queryFromChat}  
           isTelegram={true} 
         />
         <PopularProductsBlock 

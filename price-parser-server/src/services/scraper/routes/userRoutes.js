@@ -7,7 +7,6 @@ router.post('/register', async (req, res) => {
   try {
     console.log('[Route] Получены данные:', req.body);
     
-    // 🔹 ИСПРАВЛЕНИЕ: достаём данные из userData
     const userData = req.body.userData || req.body;
     
     console.log('[Route] Данные для сервиса:', userData);
@@ -44,7 +43,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// 🔄 Дополнительные маршруты (примеры для масштабирования)
 
 router.get('/:id', async (req, res) => {
   try {

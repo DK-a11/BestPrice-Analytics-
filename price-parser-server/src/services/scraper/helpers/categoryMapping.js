@@ -1,6 +1,6 @@
 // 1. Прямые соответствия: сегмент URL -> ваша категория
 export const DIRECT_MAP = {
-  // 📱 ЭЛЕКТРОНИКА
+  //ЭЛЕКТРОНИКА
   'smartfon': 'electronics',
   'telefon': 'electronics',
   'mobile': 'electronics',
@@ -22,7 +22,7 @@ export const DIRECT_MAP = {
   'fotoapparat': 'electronics',
   'kamera': 'electronics',
 
-  // 👕 ОДЕЖДА
+  //ОДЕЖДА
   'odezhda': 'clothing',
   'futbolka': 'clothing',
   'rubashka': 'clothing',
@@ -43,7 +43,7 @@ export const DIRECT_MAP = {
   'botinki': 'clothing',
   'tufli': 'clothing',
 
-  // 🏠 ДОМ
+  //ДОМ
   'kuhnya': 'home',
   'dom': 'home',
   'mebel': 'home',
@@ -67,7 +67,7 @@ export const DIRECT_MAP = {
   'bytovaya_tekhnika': 'home',
   'vannaya': 'home',
 
-  // 🏃 СПОРТ
+  //СПОРТ
   'sport': 'sports',
   'trenazher': 'sports',
   'ganteli': 'sports',
@@ -85,7 +85,7 @@ export const DIRECT_MAP = {
   'palatka': 'sports',
   'ryukzak': 'sports',
 
-  // 🎒 АКСЕССУАРЫ
+  //АКСЕССУАРЫ
   'zaryadki': 'accessories',
   'zaryadka': 'accessories',
   'aksessuary': 'accessories',
@@ -112,7 +112,7 @@ export const DIRECT_MAP = {
 
 // 2. Регулярные выражения для сложных случаев
 export const REGEX_MAP = [
-  // 📱 ЭЛЕКТРОНИКА
+  //ЭЛЕКТРОНИКА
   { pattern: /.*smartfon.*/i, category: 'electronics' },
   { pattern: /.*telefon.*/i, category: 'electronics' },
   { pattern: /.*mobile.*/i, category: 'electronics' },
@@ -136,7 +136,7 @@ export const REGEX_MAP = [
   { pattern: /.*router.*/i, category: 'electronics' },
   { pattern: /.*wifi.*/i, category: 'electronics' },
 
-  // 👕 ОДЕЖДА
+  //ОДЕЖДА
   { pattern: /.*odezhda.*/i, category: 'clothing' },
   { pattern: /.*futbolka.*/i, category: 'clothing' },
   { pattern: /.*rubashka.*/i, category: 'clothing' },
@@ -159,7 +159,7 @@ export const REGEX_MAP = [
   { pattern: /.*tufli.*/i, category: 'clothing' },
   { pattern: /.*sandali.*/i, category: 'clothing' },
 
-  // 🏠 ДОМ
+  // ДОМ
   { pattern: /.*kuhnya.*/i, category: 'home' },
   { pattern: /.*dom.*/i, category: 'home' },
   { pattern: /.*mebel.*/i, category: 'home' },
@@ -194,7 +194,7 @@ export const REGEX_MAP = [
   { pattern: /.*kover.*/i, category: 'home' },
   { pattern: /.*shtory.*/i, category: 'home' },
 
-  // 🏃 СПОРТ
+  // СПОРТ
   { pattern: /.*sport.*/i, category: 'sports' },
   { pattern: /.*trenazher.*/i, category: 'sports' },
   { pattern: /.*ganteli.*/i, category: 'sports' },
@@ -224,7 +224,7 @@ export const REGEX_MAP = [
   { pattern: /.*protein.*/i, category: 'sports' },
   { pattern: /.*beg.*/i, category: 'sports' },
 
-  // 🎒 АКСЕССУАРЫ
+  // АКСЕССУАРЫ
   { pattern: /.*aksessuar.*/i, category: 'accessories' },
   { pattern: /.*zaryadk.*/i, category: 'accessories' },
   { pattern: /.*kabel.*/i, category: 'accessories' },

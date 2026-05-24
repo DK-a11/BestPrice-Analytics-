@@ -1,5 +1,4 @@
 import express from 'express';
-// ⚠️ Поправь относительный путь под свою структуру папок
 //import { fakeParse } from '../fakeparse.js'; 
 
 
@@ -7,7 +6,6 @@ const router = express.Router();
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// 🟢 POST /api/parse (рекомендуется)
 router.post('/parse', async (req, res, next) => {
   try {
     const { query, pages } = req.body;

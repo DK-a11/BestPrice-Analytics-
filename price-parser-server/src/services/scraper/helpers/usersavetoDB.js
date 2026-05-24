@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcrypt'; // 🔐 Импортируем bcrypt
+import bcrypt from 'bcrypt'; 
 import User from '../../../models/users.js';
 
 export const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/PriceParserDB';
@@ -19,10 +19,10 @@ export const connectDatabase = async () => {
       socketTimeoutMS: 45000,
     });
     _isDbConnected = true;
-    console.log('✅ MongoDB подключена:', mongoose.connection.host);
+    console.log('MongoDB подключена:', mongoose.connection.host);
     return true;
   } catch (error) {
-    console.error('❌ Ошибка подключения к MongoDB:', error.message);
+    console.error('Ошибка подключения к MongoDB:', error.message);
     throw error;
   }
 };
@@ -50,17 +50,17 @@ const validateUserData = (userData) => {
     throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
   }
 
-  // 🔐 Валидация сложности пароля
+
   if (userData.password && userData.password.length < 8) {
     throw new Error('Password must be at least 8 characters long');
   }
 
-  console.log('[Validation] ✅ Все поля на месте');
+  console.log('[Validation] Все поля на месте');
 };
 
-// 🔐 Вынесли хеширование в отдельную функцию для чистоты кода
+
 const hashPassword = async (plainPassword) => {
-  const saltRounds = 10; // Баланс безопасности и скорости
+  const saltRounds = 10;
   return await bcrypt.hash(plainPassword, saltRounds);
 };
 
@@ -72,42 +72,38 @@ export const createUser = async (userData) => {
   });
 
   try {
-    // Шаг 1: Подключение к БД
     console.log('[UserService] Шаг 1: Подключение к БД...');
     await connectDatabase();
-    console.log('[UserService] ✅ БД подключена');
+    console.log('[UserService] БД подключена');
 
-    // Шаг 2: Валидация
     console.log('[UserService] Шаг 2: Валидация...');
     validateUserData(userData);
-    console.log('[UserService] ✅ Валидация пройдена');
+    console.log('[UserService] Валидация пройдена');
 
-    // Шаг 3: Проверка дубликата email
     console.log('[UserService] Шаг 3: Проверка email на дубликат...');
     const existingUser = await User.findOne({ 
       email: userData.email.toLowerCase().trim() 
     }).exec();
     
     if (existingUser) {
-      console.error('[UserService] ❌ Email уже существует:', userData.email);
+      console.error('[UserService] Email уже существует:', userData.email);
       const error = new Error('Email already exists');
       error.code = 'EMAIL_EXISTS';
       error.statusCode = 409;
       throw error;
     }
-    console.log('[UserService] ✅ Email свободен');
+    console.log('[UserService] Email свободен');
 
-    // Шаг 4: Подготовка данных + 🔐 Хеширование пароля
     console.log('[UserService] Шаг 4: Подготовка данных и хеширование пароля...');
     
-    const hashedPassword = await hashPassword(userData.password); // 🔐 Хешируем!
+    const hashedPassword = await hashPassword(userData.password); 
     
     const userToCreate = {
       name: userData.name.trim(),
       email: userData.email.toLowerCase().trim(),
       phone: userData.phone.trim(),
       userType: userData.userType,
-      password: hashedPassword, // 🔐 Сохраняем хеш, а не пароль!
+      password: hashedPassword, 
       companyName: userData.userType === 'company' 
         ? userData.companyName?.trim() 
         : undefined,
@@ -117,7 +113,6 @@ export const createUser = async (userData) => {
       password: '***hashed***'
     });
 
-    // Шаг 5: Создание пользователя
     console.log('[UserService] Шаг 5: Создание документа User...');
     const newUser = new User(userToCreate);
     console.log('[UserService] Документ создан:', {
@@ -125,12 +120,10 @@ export const createUser = async (userData) => {
       password: '***hashed***'
     });
 
-    // Шаг 6: Сохранение в БД
     console.log('[UserService] Шаг 6: Сохранение в БД...');
     await newUser.save();
-    console.log('[UserService] ✅ Пользователь сохранён:', newUser._id);
+    console.log('[UserService] Пользователь сохранён:', newUser._id);
 
-    // Шаг 7: Возврат результата
     console.log('[UserService] Шаг 7: Формирование ответа...');
     const publicProfile = newUser.getPublicProfile 
       ? newUser.getPublicProfile() 
@@ -148,12 +141,11 @@ export const createUser = async (userData) => {
     return publicProfile;
 
   } catch (error) {
-    console.error('[UserService] ❌ === ОШИБКА ===');
+    console.error('[UserService] === ОШИБКА ===');
     console.error('[UserService] Тип ошибки:', error.name);
     console.error('[UserService] Сообщение:', error.message);
     console.error('[UserService] Код:', error.code);
     
-    // Обработка дубликатов
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
       console.error(`[UserService] Дубликат поля: ${field}`);
@@ -163,7 +155,6 @@ export const createUser = async (userData) => {
       throw duplicateError;
     }
     
-    // Обработка ошибок валидации Mongoose
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);
       console.error('[UserService] Ошибки валидации Mongoose:', messages);

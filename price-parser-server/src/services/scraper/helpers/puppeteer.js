@@ -13,10 +13,8 @@ export const LAUNCH_PUPPETEER_OPTS = {
         '--disable-gpu',
         '--window-size=1920x1080',
         '--disable-blink-features=AutomationControlled',
-        // 🔹 Дополнительные аргументы для "человечности"
         '--disable-features=IsolateOrigins,site-per-process',
     ],
-    //отключил стандартный User-Agent Puppeteer
     defaultViewport: null,
 };
 
@@ -25,7 +23,6 @@ export const PAGE_PUPPETEER_OPTS = {
     timeout: 60000, 
 };
 
-// 🔹 Реалистичные заголовки и User-Agent
 const REALISTIC_HEADERS = {
     'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -80,7 +77,7 @@ export async function getPuppeteerPage(url) {
         // 8. Проверяем, не остались ли мы на странице защиты
         const currentUrl = page.url();
         if (currentUrl.includes('/cdn-cgi/challenge-platform/')) {
-            console.warn('⚠️ Cloudflare всё ещё активен. Текущий URL:', currentUrl);
+            console.warn('Cloudflare всё ещё активен. Текущий URL:', currentUrl);
         }
 
         const content = await page.content();
@@ -94,7 +91,7 @@ export async function getPuppeteerPage(url) {
         };
 
     } catch (error) {
-        console.error('❌ Ошибка в getPuppeteerPage:', error.message);
+        console.error('Ошибка в getPuppeteerPage:', error.message);
         throw error;
     } finally {
         // 10. Гарантированно закрываем браузер даже при ошибке

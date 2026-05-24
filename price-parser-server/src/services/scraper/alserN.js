@@ -4,12 +4,10 @@ import { arrayFromlength } from './helpers/common.js';
 import { saveToDB } from './helpers/savetodb.js';
 import { extractCategoryFromUrl } from './helpers/categoryExtract.js';
 
-// 🔹 Формируем URL динамически с кодированием запроса
 const getSearchUrl = (query, page = 1) => {
   return `https://alser.kz/search?q=${encodeURIComponent(query)}&page=${page}`;
 };
 
-// 🔹 Нормализация строки: нижний регистр, удаление пунктуации, разбивка на слова
 const normalizeText = (str) => {
   if (!str) return [];
   return str
@@ -43,7 +41,7 @@ export async function parseAlser(query, pages = 1) {
     
     const pageContent = await getPuppeteerPage(url);
     
-    console.log('📊 Alser загрузка:', {
+    console.log('Alser загрузка:', {
       url: pageContent.url,
       title: pageContent.title,
       cloudflare: pageContent.isCloudflare ? '✅' : '❌',
@@ -82,8 +80,7 @@ export async function parseAlser(query, pages = 1) {
         await saveToDB(queryItems);
       }
     } catch (dbError) {
-      console.error('❌ Alser: Ошибка сохранения в БД:', dbError.message);
-      // 🔹 Не пробрасываем ошибку, чтобы пользователь получил данные даже при сбое БД
+      console.error('Alser: Ошибка сохранения в БД:', dbError.message);
     }
 
     allResults.push(...queryItems);
@@ -92,5 +89,4 @@ export async function parseAlser(query, pages = 1) {
   return allResults;
 }
 
-// 🔹 Экспорт по умолчанию для удобства
 export default { parseAlser };

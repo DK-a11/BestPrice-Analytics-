@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 
 const querySchema = new mongoose.Schema(
   {
-    // 🔗 Связь с пользователем (обязательная)
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -37,7 +36,6 @@ const querySchema = new mongoose.Schema(
       // Необязательно: может быть пустым для userType !== 'company'
     },
 
-    // 🔍 Собственные поля запроса
     query: {
       type: String,
       required: [true, 'Query text is required'],
@@ -46,7 +44,6 @@ const querySchema = new mongoose.Schema(
       index: true, // Полнотекстовый поиск по запросам
     },
 
-    // 📅 Дата создания запроса
     querysDate: {
       type: Date,
       default: Date.now,
@@ -66,10 +63,8 @@ const querySchema = new mongoose.Schema(
   }
 );
 
-// 🔍 Композитный индекс для частых запросов: "история пользователя по дате"
 querySchema.index({ userId: 1, querysDate: -1 });
 
-// 🔍 Полнотекстовый поиск по полю query
 querySchema.index({ query: 'text' });
 
 /**

@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import Item from '../../models/items.js';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/PriceParserDB';
+// 🔥 Подключение к БД — как в оригинале
+mongoose.connect('mongodb://localhost:27017/PriceParserDB');
 
 const escapeRegex = (str) => {
   if (!str) return '';
@@ -22,18 +23,16 @@ const createWordBasedTitleFilter = (query) => {
   return { $and: conditions };
 };
 
-
 const normalizeTitle = (title) => {
   if (!title) return '';
   return title
     .toLowerCase()
-    .replace(/\(.*?\)/g, '')           // Удаление скобки с артикулами (MG2P4HX/A)
-    .replace(/\d+\/\d+gb/gi, '')       // Удаление варианты памяти (12/256GB)
-    .replace(/[^a-zа-яё0-9\s]/gi, ' ') // только буквы и цифры
-    .replace(/\s+/g, ' ')              // Убираются лишние пробелы
+    .replace(/\(.*?\)/g, '')           // Удаление скобок с артикулами
+    .replace(/\d+\/\d+gb/gi, '')       // Удаление вариантов памяти
+    .replace(/[^a-zа-яё0-9\s]/gi, ' ') // Только буквы и цифры
+    .replace(/\s+/g, ' ')              // Убираем лишние пробелы
     .trim();
 };
-
 
 const formatItemResponse = (baseItem, group, bestPrice) => {
   return {
@@ -50,30 +49,59 @@ const formatItemResponse = (baseItem, group, bestPrice) => {
 };
 
 
-export const getProductsByQuery = async (query) => {
+export const getProductsByQuery = async (query, options = {}) => {
+  const { stores = [] } = options;
+  
   try {
     if (!query || typeof query !== 'string') {
       throw new Error('Query parameter is required and must be a string');
     }
 
-    // 🔍 Создаём фильтр по словам запроса
+    // 🔍 Создаём базовый фильтр по названию
     const titleFilter = createWordBasedTitleFilter(query);
     if (Object.keys(titleFilter).length === 0) {
       console.warn('⚠️ Пустой или невалидный запрос:', query);
       return [];
     }
 
-    const items = await Item.find({ 
-      ...titleFilter 
-    })
-    .sort({ parsedAt: -1 })
-    .lean();
+    // 🔥 Формируем итоговый фильтр с учётом магазинов
+    let finalFilter = titleFilter;
+    
+    if (stores.length > 0) {
+      console.log('🏪 [products] Фильтр по магазинам:', stores);
+      
+      // 🔥 Case-insensitive regex для надёжного сопоставления названий магазинов
+      const storeRegexes = stores.map(s => 
+        new RegExp(escapeRegex(s.trim()), 'i')
+      );
+      
+      finalFilter = { 
+        $and: [titleFilter, { store: { $in: storeRegexes } }] 
+      };
+    }
+
+    // 🔍 Отладка: сколько товаров находится до и после фильтрации
+    const titleMatchCount = await Item.countDocuments(titleFilter);
+    console.log(`📊 [products] Товаров по названию "${query}": ${titleMatchCount}`);
+
+    const items = await Item.find(finalFilter)
+      .sort({ parsedAt: -1 })
+      .lean();
+
+    console.log(`✅ [products] После фильтрации: ${items.length} товаров`);
+
+    // 🔍 Если 0 результатов при активном фильтре — покажем какие магазины есть в БД
+    if (items.length === 0 && stores.length > 0) {
+      const actualStores = await Item.distinct('store', titleFilter);
+      console.warn('⚠️ [products] Фильтр вернул 0. Реальные store в БД:', actualStores);
+    }
 
     if (!items.length) {
-      console.log(`📭 Не найдено товаров по запросу "${query}" (слова: ${query.trim().split(/\s+/).filter(w => w.length > 0).join(', ')})`);
+      console.log(`📭 Не найдено товаров по запросу "${query}"`);
       return [];
     }
 
+    // Группировка по нормализованному названию
     const grouped = items.reduce((acc, item) => {
       const normalized = normalizeTitle(item.title);
       
@@ -84,6 +112,7 @@ export const getProductsByQuery = async (query) => {
       return acc;
     }, {});
 
+    // Формирование результата с лучшей ценой в группе
     const result = Object.values(grouped).map(group => {
       const prices = group.map(item => {
         const parsed = parseInt(String(item.price).replace(/\s/g, ''), 10);
@@ -102,10 +131,11 @@ export const getProductsByQuery = async (query) => {
       return formatItemResponse(baseItem, group, bestPrice);
     }).filter(Boolean);
 
+    // Сортировка по цене (от дешёвых к дорогим)
     return result.sort((a, b) => a.price - b.price);
 
   } catch (error) {
-    console.error('[dataBaseExtract] Error:', error);
+    console.error('[dataBaseExtract] Error in getProductsByQuery:', error);
     throw new Error(`Failed to extract products for query "${query}": ${error.message}`);
   }
 };

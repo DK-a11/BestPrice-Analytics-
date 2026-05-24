@@ -115,8 +115,6 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister, onLoginSuccess }) => 
       }
       onClose();
       
-      // 🎯 Обработка успешного ответа
-      // TODO: сохранить токен авторизации
       if (result.token) {
         localStorage.setItem('authToken', result.token);
         sessionStorage.setItem('user', JSON.stringify(result.user));

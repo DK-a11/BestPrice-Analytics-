@@ -4,12 +4,10 @@ import { arrayFromlength } from './helpers/common.js';
 import { saveToDB } from './helpers/savetodb.js';
 import { extractCategoryFromUrl } from './helpers/categoryExtract.js';
 
-// 🔹 Формируем базовый URL динамически
 const getSearchUrl = (query, page = 1) => {
   return `https://www.sulpak.kz/Search?query=${encodeURIComponent(query)}`;
 };
 
-// 🔹 Нормализация строки: нижний регистр, удаление пунктуации, разбивка на слова
 const normalizeText = (str) => {
   if (!str) return [];
   return str
@@ -34,7 +32,6 @@ const matchesQueryWords = (title, query, threshold = 0.6) => {
   return matchedCount / queryWords.length >= threshold;
 };
 
-// 🔹 Основная функция парсинга
 export async function parseSulpak(query, pages = 1) {
   const allResults = [];
 
@@ -54,10 +51,8 @@ export async function parseSulpak(query, pages = 1) {
       const fullurl = link ? (link.startsWith('http') ? link : `https://www.sulpak.kz${link}`) : null;
       const category = extractCategoryFromUrl(fullurl);
       
-      // 🔹 Заменяем старую проверку на новую, с порогом 0.6 (можно настроить)
       const matchesQuery = matchesQueryWords(title, query, 0.6);
 
-      // 🔹 Фильтруем только релевантные товары
       if (matchesQuery) {
         queryItems.push({ 
           store, 
@@ -71,7 +66,6 @@ export async function parseSulpak(query, pages = 1) {
       }
     });
 
-    // 🔹 Сохраняем в БД, но не ломаем ответ, если БД упала
     try {
       if (queryItems.length > 0) {
         await saveToDB(queryItems);
@@ -86,5 +80,4 @@ export async function parseSulpak(query, pages = 1) {
   return allResults;
 }
 
-// 🔹 Экспорт по умолчанию для удобства импорта
 export default { parseSulpak };

@@ -5,7 +5,6 @@ const router = express.Router();
 
 router.get('/analytics/history', async (req, res, next) => {
   try {
-    // ✅ GET-запрос → параметры из req.query
     const {
       query,
       category,
@@ -21,31 +20,50 @@ router.get('/analytics/history', async (req, res, next) => {
       });
     }
 
+    // 🔥 Надёжный парсинг параметра stores:
+    // - строка "alser,kaspi" → ['alser', 'kaspi']
+    // - массив ['alser', 'kaspi'] → ['alser', 'kaspi']
+    let storesArray = [];
+    if (stores) {
+      storesArray = Array.isArray(stores)
+        ? stores.map(s => String(s).trim().toLowerCase())
+        : stores.split(',').map(s => s.trim().toLowerCase());
+      storesArray = storesArray.filter(Boolean);
+    }
+
+    console.log('📥 History route received:', {
+      query,
+      category,
+      startDate,
+      endDate,
+      storesRaw: stores,
+      parsedStores: storesArray,
+      isFilterActive: storesArray.length > 0
+    });
+
     const data = await getPriceHistoryByStore({
       query: query.toLowerCase(),
       category,
       startDate,
       endDate,
-      stores: stores && typeof stores === 'string' 
-        ? stores.split(',').map(s => s.trim()) 
-        : []
+      stores: storesArray
     });
 
-    // ✅ Гарантия, что data — массив
     const resultData = Array.isArray(data) ? data : [];
 
-    console.log(`📊 Analytics result for "${query}":`, resultData);
+    console.log(`📊 History result for "${query}": ${resultData.length} entries${storesArray.length > 0 ? ` (stores: ${storesArray.join(',')})` : ''}`);
+    
     res.json({
       success: true,
       count: resultData.length,
-      data: resultData
+      data: resultData,
+      meta: { storesFiltered: storesArray.length > 0 ? storesArray : 'all' }
     });
 
   } catch (error) {
-    console.error('❌ Analytics route error:', error);
+    console.error('❌ Analytics history route error:', error);
     next(error);
   }
 });
-
 
 export default router;

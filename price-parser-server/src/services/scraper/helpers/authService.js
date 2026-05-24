@@ -28,33 +28,31 @@ export const connectDatabase = async () => {
       console.log('[AuthDB] Подключение к MongoDB:', MONGODB_URI.replace(/:\/\/[^:]+:[^@]+@/, '://***:***@'));
       
       await mongoose.connect(MONGODB_URI, {
-        // 🛡️ Оптимизации для production
         serverSelectionTimeoutMS: 5000,  // Таймаут выбора сервера
         socketTimeoutMS: 45000,          // Таймаут сокета
       });
 
       _isDbConnected = true;
-      console.log(`✅ [AuthDB] MongoDB подключена: ${mongoose.connection.host}`);
+      console.log(`[AuthDB] MongoDB подключена: ${mongoose.connection.host}`);
       
-      // 📡 Обработчики событий соединения
       mongoose.connection.on('error', (err) => {
-        console.error('❌ [AuthDB] MongoDB connection error:', err.message);
+        console.error('[AuthDB] MongoDB connection error:', err.message);
         _isDbConnected = false;
       });
       
       mongoose.connection.on('disconnected', () => {
-        console.warn('⚠️ [AuthDB] MongoDB disconnected');
+        console.warn('[AuthDB] MongoDB disconnected');
         _isDbConnected = false;
       });
 
       mongoose.connection.on('reconnected', () => {
-        console.log('🔄 [AuthDB] MongoDB reconnected');
+        console.log('[AuthDB] MongoDB reconnected');
         _isDbConnected = true;
       });
 
       return true;
     } catch (error) {
-      console.error('❌ [AuthDB] Failed to connect to MongoDB:', error.message);
+      console.error('[AuthDB] Failed to connect to MongoDB:', error.message);
       _dbConnectionPromise = null; // Сбрасываем промис для повторной попытки
       throw error;
     }
@@ -74,17 +72,16 @@ export const disconnectDatabase = async () => {
     await mongoose.disconnect();
     _isDbConnected = false;
     _dbConnectionPromise = null;
-    console.log('🔌 [AuthDB] MongoDB disconnected');
+    console.log('[AuthDB] MongoDB disconnected');
   }
 };
 
 
 export const authenticateUser = async ({ email, password }) => {
   try {
-    // 🔹 0. Гарантируем подключение к БД перед операцией
     console.log('[AuthService] Инициализация авторизации...');
     await connectDatabase();
-    console.log('[AuthService] ✅ БД подключена');
+    console.log('[AuthService] БД подключена');
 
     if (!email || !password) {
       console.warn('[AuthService] Отсутствуют обязательные поля');
@@ -99,7 +96,7 @@ export const authenticateUser = async ({ email, password }) => {
     const user = await User.findOne({ 
       email: email.toLowerCase().trim() 
     })
-    .select('+password') // Включаем пароль, так как по умолчанию он исключён
+    .select('+password') 
     .exec();
 
     if (!user) {
@@ -135,12 +132,10 @@ export const authenticateUser = async ({ email, password }) => {
         };
 
   } catch (error) {
-    // 🔹 Пробрасываем известные ошибки бизнеса
     if (['INVALID_CREDENTIALS', 'MISSING_CREDENTIALS'].includes(error.code)) {
       throw error;
     }
 
-    // 🔹 Обработка ошибок базы данных
     if (error.name === 'MongoServerError' || error.name === 'MongooseError') {
       console.error('[AuthService] Database error:', error.message);
       const dbError = new Error('Authentication service temporarily unavailable');
@@ -149,7 +144,6 @@ export const authenticateUser = async ({ email, password }) => {
       throw dbError;
     }
 
-    // 🔹 Логирование и проброс непредвиденных ошибок
     console.error('[AuthService] Unexpected error:', {
       name: error.name,
       message: error.message,

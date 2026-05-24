@@ -12,6 +12,7 @@ import productExportRoutes from './services/scraper/routes/productExport.js';
 import userRoutes from './services/scraper/routes/userRoutes.js';
 import authRoutes from './services/scraper/routes/authRoutes.js';
 import querySaveRoutes from './services/scraper/routes/querySaveRoutes.js';
+import queryhistory from './services/scraper/routes/queryhistory.js';
 
 dotenv.config();
 const app = express(); // Разрешаем CORS для нашего фронтенда
@@ -69,7 +70,7 @@ bot.on("message", async (msg) => {
     await bot.sendChatAction(chatId, "typing");
     
     // Опционально: небольшая задержка, чтобы пользователь точно заметил анимацию (800мс)
-    // await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 800));
 
     // 4. Безопасная передача названия в URL
     const safeQuery = encodeURIComponent(text);
@@ -116,6 +117,7 @@ async function startServer() {
   app.use('/api', userRoutes); 
   app.use('/api', authRoutes); 
   app.use('/api', querySaveRoutes);
+  app.use('/api', queryhistory); // Роуты для истории запросов
 
 
   app.listen(4200, () => {

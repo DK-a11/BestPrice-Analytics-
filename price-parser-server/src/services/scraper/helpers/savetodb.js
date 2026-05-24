@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import Item from '../../../models/items.js';
 
-// Подключение к БД (лучше вынести в отдельный файл db.js)
 const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/PriceParserDB';
 
 export async function connectDB() {
@@ -10,15 +9,14 @@ export async function connectDB() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ MongoDB connected');
+    console.log('MongoDB connected');
   }
 }
-
 
 export async function saveToDB(items) {
   try {
     if (!Array.isArray(items) || items.length === 0) {
-      console.log('⚠️ Нет данных для сохранения');
+      console.log('Нет данных для сохранения');
       return { insertedCount: 0, updatedCount: 0, errors: [] };
     }
 
@@ -29,12 +27,11 @@ export async function saveToDB(items) {
       errors: []
     };
 
-    // Обрабатываем каждый товар индивидуально для гибкости
     for (const item of items) {
       try {
         const parsedAt = item.parsedAt 
           ? new Date(item.parsedAt) 
-          : new Date(); // текущая дата, если не указана
+          : new Date(); 
         
         const existing = await Item.findOne({ 
           url: item.url, 
@@ -45,7 +42,6 @@ export async function saveToDB(items) {
         });
 
         if (existing) {
-          // 📝 Обновляем существующую запись (если цена изменилась)
           if (existing.price !== item.price || existing.availability !== item.availability) {
             await Item.findByIdAndUpdate(existing._id, {
               ...item,
@@ -53,25 +49,24 @@ export async function saveToDB(items) {
               $setOnInsert: { createdAt: new Date() }
             }, { new: true, runValidators: true });
             results.updated++;
-            console.log(`🔄 Обновлено: ${item.name} | ${item.price} ${item.currency}`);
+            console.log(`Обновлено: ${item.name} | ${item.price} ${item.currency}`);
           } else {
-            results.skipped++; // Данные не изменились
+            results.skipped++; 
           }
         } else {
-          // ➕ Создаём новую запись истории
           await Item.create({
             ...item,
             parsedAt
           });
           results.inserted++;
-          console.log(`✅ Добавлено: ${item.name} | ${item.price} ${item.currency} | ${parsedAt.toISOString().split('T')[0]}`);
+          console.log(`Добавлено: ${item.name} | ${item.price} ${item.currency} | ${parsedAt.toISOString().split('T')[0]}`);
         }
       } catch (itemError) {
         results.errors.push({
           url: item.url,
           error: itemError.message
         });
-        console.error(`❌ Ошибка для ${item.url}:`, itemError.message);
+        console.error(`Ошибка для ${item.url}:`, itemError.message);
       }
     }
 
@@ -84,7 +79,7 @@ export async function saveToDB(items) {
     return results;
     
   } catch (error) {
-    console.error('💥 Критическая ошибка БД:', error.message);
+    console.error('Критическая ошибка БД:', error.message);
     throw error;
   }
 }

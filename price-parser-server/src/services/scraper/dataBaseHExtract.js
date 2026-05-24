@@ -1,17 +1,8 @@
 import mongoose from 'mongoose';
 import Item from '../../models/items.js';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/PriceParserDB';
-
-export const connectDB = async () => {
-  try {
-    await mongoose.connect(MONGODB_URI);
-    console.log('✅ MongoDB connected');
-  } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
-    throw error;
-  }
-};
+// 🔥 Подключение к БД — как в оригинале
+mongoose.connect('mongodb://localhost:27017/PriceParserDB');
 
 const escapeRegex = (str) => {
   if (!str) return '';
@@ -22,7 +13,6 @@ const createWordBasedTitleFilter = (query) => {
   if (!query || typeof query !== 'string') return {};
   
   const words = query.trim().split(/\s+/).filter(word => word.length > 0);
-  
   if (words.length === 0) return {};
 
   const conditions = words.map(word => ({
@@ -44,7 +34,15 @@ const capitalizeStore = (store) => {
   return store.charAt(0).toUpperCase() + store.slice(1).toLowerCase();
 };
 
-
+/**
+ * Получение истории цен с фильтрацией по магазинам
+ * @param {Object} params
+ * @param {string} params.query - поисковый запрос
+ * @param {string} [params.category] - категория товара
+ * @param {string} [params.startDate] - начальная дата
+ * @param {string} [params.endDate] - конечная дата
+ * @param {string[]} [params.stores] - массив названий магазинов для фильтрации
+ */
 export const getPriceHistoryByStore = async ({
   query,
   category = 'all',
@@ -55,6 +53,7 @@ export const getPriceHistoryByStore = async ({
   try {
     const filter = {};
     
+    // 🔍 Фильтр по названию товара
     if (query) {
       const titleFilter = createWordBasedTitleFilter(query);
       if (Object.keys(titleFilter).length > 0) {
@@ -62,18 +61,43 @@ export const getPriceHistoryByStore = async ({
       }
     }
     
+    // Фильтр по категории
     if (category && category !== 'all') {
       filter.category = category;
     }
     
+    // Фильтр по дате
     if (startDate || endDate) {
       filter.parsedAt = {};
       if (startDate) filter.parsedAt.$gte = new Date(startDate);
       if (endDate) filter.parsedAt.$lte = new Date(endDate);
     }
     
+    // 🔥 Фильтр по магазинам — с регистронезависимым сравнением
     if (Array.isArray(stores) && stores.length > 0) {
-      filter.store = { $in: stores.map(s => s.toLowerCase()) };
+      console.log('🏪 Применяю фильтр по магазинам (история):', stores);
+      
+      // 🔍 Сначала проверим, сколько записей находится без фильтра по магазинам
+      const countWithoutStoreFilter = await Item.countDocuments(filter);
+      console.log(`📊 Записей по запросу "${query}" без фильтра магазинов: ${countWithoutStoreFilter}`);
+      
+      // 🔥 Используем case-insensitive regex для надёжного сопоставления
+      const storeRegexes = stores.map(s => new RegExp(escapeRegex(s.trim()), 'i'));
+      filter.store = { $in: storeRegexes };
+      
+      const countWithStoreFilter = await Item.countDocuments(filter);
+      console.log(`📊 Записей после фильтра магазинов: ${countWithStoreFilter}`);
+      
+      // ⚠️ Если 0 — покажем какие магазины реально есть в БД
+      if (countWithStoreFilter === 0) {
+        // Временно уберём фильтр store для distinct
+        const { store: _, ...filterWithoutStore } = filter;
+        const actualStores = await Item.distinct('store', filterWithoutStore);
+        
+        console.warn('⚠️ Фильтр по магазинам вернул 0 записей!');
+        console.warn('📦 Реальные значения поля store в БД для этого запроса:', actualStores);
+        console.warn('🔍 Запрошенные магазины:', stores);
+      }
     }
 
     const records = await Item.find(filter)
@@ -86,6 +110,9 @@ export const getPriceHistoryByStore = async ({
       return [];
     }
 
+    console.log(`✅ Найдено ${records.length} записей для истории цен`);
+
+    // Группировка по дате и магазину
     const pricesByDateAndStore = {};
     
     records.forEach(record => {
@@ -96,7 +123,7 @@ export const getPriceHistoryByStore = async ({
         ? parseInt(String(record.price).replace(/\s/g, ''), 10) 
         : null;
 
-      if (price === null || isNaN(price)) return; // пропускаем невалидные цены
+      if (price === null || isNaN(price)) return;
 
       if (!pricesByDateAndStore[dateKey]) {
         pricesByDateAndStore[dateKey] = {};
@@ -108,6 +135,7 @@ export const getPriceHistoryByStore = async ({
       pricesByDateAndStore[dateKey][storeName].push(price);
     });
 
+    // Формирование результата
     const result = Object.entries(pricesByDateAndStore).map(([date, storesData]) => {
       const entry = { date };
       
@@ -119,12 +147,14 @@ export const getPriceHistoryByStore = async ({
       return entry;
     });
 
+    // Сортировка по дате
     result.sort((a, b) => {
       const [dayA, monthA] = a.date.split('.').map(Number);
       const [dayB, monthB] = b.date.split('.').map(Number);
       return (monthA - monthB) || (dayA - dayB);
     });
 
+    console.log(`📈 Сформировано ${result.length} точек данных для графика истории`);
     return result;
 
   } catch (error) {
@@ -136,7 +166,6 @@ export const getPriceHistoryByStore = async ({
 export const getAvailableStores = async (query) => {
   try {
     const filter = query ? createWordBasedTitleFilter(query) : {};
-      
     const stores = await Item.distinct('store', filter);
     return stores.map(capitalizeStore).filter(Boolean);
   } catch (error) {
@@ -147,6 +176,5 @@ export const getAvailableStores = async (query) => {
 
 export default {
   getPriceHistoryByStore,
-  getAvailableStores,
-  connectDB
+  getAvailableStores
 };
