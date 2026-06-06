@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import Item from '../../models/items.js';
 
-mongoose.connect('mongodb://localhost:27017/PriceParserDB');
+mongoose.connect('mongodb+srv://kramarevdenis17_db_user:wypdCawRJnJPCPDC@bestpricedb.exwoxk2.mongodb.net/');
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
