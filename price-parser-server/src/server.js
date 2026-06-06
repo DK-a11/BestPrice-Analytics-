@@ -25,8 +25,8 @@ const ALLOWED_ORIGINS = [
   'https://dismay-bonanza-duo.ngrok-free.dev/tg-app',     // Домен, где лежит Telegram Web App
   'http://localhost:5173', 
   'https://best-price-analytics-ear7-m5a4iacg9-dk-a11-s-projects.vercel.app',
-  'https://best-price-analytics-ear7.vercel.app'
-           
+  'https://best-price-analytics-ear7.vercel.app',
+  'https://bestprice-analytics.pages.dev'
 ];
 
 const STOP_WORDS = [

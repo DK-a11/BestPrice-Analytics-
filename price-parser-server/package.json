@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon ./src/server.js",
-    "start": "node ./src/services/scraper/sulpak.js"
+    "start": "node ./src/server.js"
   },
   "keywords": [],
   "author": "",
