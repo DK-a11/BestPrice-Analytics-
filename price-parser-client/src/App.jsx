@@ -12,10 +12,10 @@ import AccountProfile from './components/RegistrationForm/AccountProfile';
 import './index.css';
 
 const STORES_CONFIG = [
-  { id: 'alser', name: 'Alser', color: '#10b981', icon: '💚' },
-  { id: 'kaspi', name: 'Kaspi', color: '#f54545', icon: '🛒' },
-  { id: 'sulpak', name: 'Sulpak', color: '#f59e0b', icon: '🔌' },
-  { id: 'alfa', name: 'Alfa', color: '#3b82f6', icon: '🏪' },
+  { id: 'Alser', name: 'Alser', color: '#10b981', icon: '💚' },
+  { id: 'Kaspi', name: 'Kaspi', color: '#f54545', icon: '🛒' },
+  { id: 'Sulpak', name: 'Sulpak', color: '#f59e0b', icon: '🔌' },
+  { id: 'Alfa', name: 'Alfa', color: '#3b82f6', icon: '🏪' },
 ];
 
 function MainApp() {

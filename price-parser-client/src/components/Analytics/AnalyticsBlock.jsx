@@ -6,14 +6,28 @@ import {
 } from 'recharts';
 import { FiTrendingDown, FiTrendingUp, FiDollarSign, FiShoppingBag } from 'react-icons/fi';
 import { formatPrice } from '../../utils/helpers';
-import { extractCProducts, extractHProducts, extractIProducts, exportProducts } from '../../services/api';
+import { extractCProducts, extractHProducts, extractIProducts, extractProducts, exportProducts } from '../../services/api';
 import './AnalyticsBlock.css';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+const calculateStoreProductCounts = (products) => {
+  if (!products || products.length === 0) return {};
+  
+  return products.reduce((acc, product) => {
+    if (product.stores && Array.isArray(product.stores)) {
+      product.stores.forEach(store => {
+        acc[store] = (acc[store] || 0) + 1;
+      });
+    }
+    return acc;
+  }, {});
+};
+
 const AnalyticsBlock = ({ query, selectedStores = [] }) => {
   const [priceHistory, setPriceHistory] = useState([]);
   const [storeComparison, setStoreComparison] = useState([]);
+  const [productsData, setProductsData] = useState([]); // ← новое состояние для товаров
   const [insights, setInsights] = useState(null);
   const [period, setPeriod] = useState('30d');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +37,13 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
     if (query?.length >= 2) {
       loadAnalytics();
     }
-  }, [query, period, selectedStores]);
+  }, [query, period]);
+
+    useEffect(() => {
+    if (query?.length >= 2) {
+      loadAnalyticsForStores();
+    }
+  }, [selectedStores]);
 
   // Логирование для отладки
   useEffect(() => {
@@ -69,25 +89,32 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
     const apiOptions = { stores: selectedStores };
     
     setIsLoading(true);
-    //await delay(90000);
-    await delay(5000);
+    await delay(selectedStores.length * 30000); 
 
     try {
-      const [historyResponse, comparisonResponse, insightsResponse] = await Promise.all([
+      //Добавлен extractProducts в Promise.all
+      const [historyResponse, comparisonResponse, insightsResponse, productsResponse] = await Promise.all([
         extractHProducts(query, apiOptions),
         extractCProducts(query, apiOptions),
-        extractIProducts(query, apiOptions)
+        extractIProducts(query, apiOptions),
+        extractProducts(query, apiOptions) //новый запрос
       ]);
 
       const historyData = historyResponse?.data || [];
       const comparisonData = comparisonResponse?.data || [];
       const insightsData = insightsResponse?.data || {};
+      const productsDataRaw = productsResponse?.data || []; // ← данные о товарах
 
       console.log('📊 Extracted historyData:', historyData);
       console.log('📊 Extracted comparisonData:', comparisonData);
       console.log('📊 Extracted insightsData:', insightsData);
+      console.log('📦 Extracted productsData:', productsDataRaw);
 
-      // Обработка данных истории цен
+      //Подсчёт количества товаров по магазинам
+      const productCounts = calculateStoreProductCounts(productsDataRaw);
+      console.log('📊 Product counts by store:', productCounts);
+
+      //Обработка данных истории цен
       const processedHistory = historyData.map(item => ({
         date: item.date,
         Alser: Number(item.Alser) || 0,
@@ -96,12 +123,16 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
         Kaspi: Number(item.Kaspi) || 0
       }));
 
-      // Обработка данных сравнения магазинов
-      const processedComparison = comparisonData.map(item => ({
-        store: item.store || 'Unknown',
-        price: Number(item.price) || 0,
-        color: item.color || '#8884d8'
-      }));
+      // Обработка данных сравнения магазинов + добавление productCount
+      const processedComparison = comparisonData.map(item => {
+        const storeName = item.store || 'Unknown';
+        return {
+          store: storeName,
+          price: Number(item.price) || 0,
+          productCount: productCounts[storeName] || 0, //количество товаров
+          color: item.color || '#8884d8'
+        };
+      });
 
       // Обработка инсайтов
       const processedInsights = {
@@ -119,7 +150,76 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
       console.log('✅ Processed insights:', processedInsights);
 
       setPriceHistory(processedHistory);
-      setStoreComparison(processedComparison);
+      setStoreComparison(processedComparison); // теперь с productCount
+      setProductsData(productsDataRaw); //сохраняем сырые данные
+      setInsights(processedInsights);
+
+    } catch (error) {
+      console.error('❌ Error loading analytics:', error);
+      //loadMockData();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+    const loadAnalyticsForStores = async () => {
+    const apiOptions = { stores: selectedStores };
+    
+    setIsLoading(true);
+    await delay(2000);
+
+    try {
+      // Добавлен extractProducts в Promise.all
+      const [historyResponse, comparisonResponse, insightsResponse, productsResponse] = await Promise.all([
+        extractHProducts(query, apiOptions),
+        extractCProducts(query, apiOptions),
+        extractIProducts(query, apiOptions),
+        extractProducts(query, apiOptions) //новый запрос
+      ]);
+
+      const historyData = historyResponse?.data || [];
+      const comparisonData = comparisonResponse?.data || [];
+      const insightsData = insightsResponse?.data || {};
+      const productsDataRaw = productsResponse?.data || []; // данные о товарах
+
+      // Подсчёт количества товаров по магазинам
+      const productCounts = calculateStoreProductCounts(productsDataRaw);
+      console.log('📊 Product counts by store:', productCounts);
+
+      // Обработка данных истории цен
+      const processedHistory = historyData.map(item => ({
+        date: item.date,
+        Alser: Number(item.Alser) || 0,
+        Sulpak: Number(item.Sulpak) || 0,
+        Alfa: Number(item.Alfa) || 0,
+        Kaspi: Number(item.Kaspi) || 0
+      }));
+
+      // Обработка данных сравнения магазинов + добавление productCount
+      const processedComparison = comparisonData.map(item => {
+        const storeName = item.store || 'Unknown';
+        return {
+          store: storeName,
+          price: Number(item.price) || 0,
+          productCount: productCounts[storeName] || 0, // ← количество товаров
+          color: item.color || '#8884d8'
+        };
+      });
+
+      // Обработка инсайтов
+      const processedInsights = {
+        averagePrice: Number(insightsData.averagePrice) || 0,
+        bestPrice: {
+          store: insightsData.bestPrice?.store || '',
+          price: Number(insightsData.bestPrice?.price) || 0
+        },
+        priceChange: Number(insightsData.priceChange) || 0,
+        recommendation: insightsData.recommendation || ''
+      };
+
+      setPriceHistory(processedHistory);
+      setStoreComparison(processedComparison); // ← теперь с productCount
+      setProductsData(productsDataRaw); // ← сохраняем сырые данные
       setInsights(processedInsights);
 
     } catch (error) {
@@ -192,10 +292,10 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
         <div className="custom-tooltip">
           <p className="tooltip-label">{data.name}</p>
           <p style={{ margin: '4px 0', fontSize: '14px' }}>
-            Доля: <strong>{data.value}%</strong>
+            Доля: {data.value}%
           </p>
           <p style={{ margin: '4px 0', fontSize: '14px' }}>
-            Цена: <strong>{formatPrice(data.price)}</strong>
+            Цена: {formatPrice(data.price)}
           </p>
           {data.isBest && (
             <p style={{ margin: '8px 0 0', color: '#10B981', fontSize: '13px', fontWeight: 600 }}>
@@ -208,15 +308,23 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
     return null;
   };
 
+  //Обновлённый CustomTooltip с отображением количества товаров
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="custom-tooltip">
           <p className="tooltip-label">{label}</p>
           {payload.map((entry, index) => (
-            <p key={index} style={{ color: entry.color }}>
-              {entry.name}: {formatPrice(entry.value)}
-            </p>
+            <div key={index} style={{ marginBottom: '4px' }}>
+              <p style={{ color: entry.color, margin: 0 }}>
+                {entry.name}: {formatPrice(entry.value)}
+              </p>
+              {entry.payload?.productCount !== undefined && (
+                <p style={{ fontSize: '12px', margin: '2px 0 0' }}>
+                  Ко-во товаров: {entry.payload.productCount}
+                </p>
+              )}
+            </div>
           ))}
         </div>
       );
@@ -235,7 +343,6 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
     );
   }
 
-  // Основной рендер
   return (
     <div className="analytics-block">
       <div className="analytics-header">
@@ -259,7 +366,28 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={storeComparison}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="store" stroke="#6B7280" />
+              <XAxis 
+                dataKey="store" 
+                stroke="#6B7280"
+                tick={({ x, y, payload }) => {
+                  const storeData = storeComparison.find(d => d.store === payload.value);
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <text 
+                        x={0} 
+                        y={0} 
+                        dy={16} 
+                        textAnchor="middle" 
+                        fill="#6B7280" 
+                        fontSize={12}
+                        fontWeight={500}
+                      >
+                        {payload.value}
+                      </text>
+                    </g>
+                  );
+                }}
+              />
               <YAxis stroke="#6B7280" />
               <Tooltip content={<CustomTooltip />} />
               <Bar
@@ -418,7 +546,7 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
             </div>
 
             <div className="insight-card best-price">
-              <FiTrendingDown className="insight-icon" />
+              <FiTrendingUp className="insight-icon" />
               <div className="insight-content">
                 <span className="insight-label">Лучшее предложение</span>
                 <span className="insight-value">
@@ -428,9 +556,9 @@ const AnalyticsBlock = ({ query, selectedStores = [] }) => {
             </div>
 
             <div className="insight-card">
-              <FiTrendingUp className="insight-icon" />
+              <FiTrendingDown className="insight-icon" />
               <div className="insight-content">
-                <span className="insight-label">Дешевле на</span>
+                <span className="insight-label">Разница с другими магазинами</span>
                 <span className={`insight-value ${insights.priceChange < 0 ? 'positive' : 'negative'}`}>
                   {insights.priceChange > 0 ? '+' : ''}{insights.priceChange}%
                 </span>

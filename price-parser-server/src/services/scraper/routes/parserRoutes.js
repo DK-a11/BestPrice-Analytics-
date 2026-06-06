@@ -51,13 +51,13 @@ router.post('/parse', async (req, res, next) => {
     };
 
     await runParser('Alser', parseAlser);
-    await delay(4500);
+    await delay(2500);
     
     await runParser('Kaspi', parseKaspi);
-    await delay(4500);
+    await delay(2500);
     
     await runParser('Sulpak', parseSulpak);
-    await delay(4500);
+    await delay(2500);
     
     await runParser('Alfa', parseAlfa);
 

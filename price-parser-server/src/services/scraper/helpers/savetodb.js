@@ -3,16 +3,6 @@ import Item from '../../../models/items.js';
 
 const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/PriceParserDB';
 
-export async function connectDB() {
-  if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(DB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('MongoDB connected');
-  }
-}
-
 export async function saveToDB(items) {
   try {
     if (!Array.isArray(items) || items.length === 0) {
@@ -33,23 +23,27 @@ export async function saveToDB(items) {
           ? new Date(item.parsedAt) 
           : new Date(); 
         
+        const startOfDay = new Date(parsedAt);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(parsedAt);
+        endOfDay.setHours(23, 59, 59, 999);
+        
         const existing = await Item.findOne({ 
-          url: item.url, 
+          link: item.link, 
           parsedAt: {
-            $gte: new Date(parsedAt.setHours(0,0,0,0)),
-            $lt: new Date(parsedAt.setHours(23,59,59,999))
+            $gte: startOfDay,
+            $lt: endOfDay
           }
         });
 
         if (existing) {
-          if (existing.price !== item.price || existing.availability !== item.availability) {
+          if (existing.price !== item.price) {
             await Item.findByIdAndUpdate(existing._id, {
               ...item,
-              parsedAt,
-              $setOnInsert: { createdAt: new Date() }
+              parsedAt
             }, { new: true, runValidators: true });
             results.updated++;
-            console.log(`Обновлено: ${item.name} | ${item.price} ${item.currency}`);
+            console.log(`Обновлено: ${item.title} | ${item.price}`);
           } else {
             results.skipped++; 
           }
@@ -59,14 +53,14 @@ export async function saveToDB(items) {
             parsedAt
           });
           results.inserted++;
-          console.log(`Добавлено: ${item.name} | ${item.price} ${item.currency} | ${parsedAt.toISOString().split('T')[0]}`);
+          console.log(`Добавлено: ${item.title} | ${item.price} | ${parsedAt.toISOString().split('T')[0]}`);
         }
       } catch (itemError) {
         results.errors.push({
-          url: item.url,
+          link: item.link,
           error: itemError.message
         });
-        console.error(`Ошибка для ${item.url}:`, itemError.message);
+        console.error(`Ошибка для ${item.link}:`, itemError.message);
       }
     }
 

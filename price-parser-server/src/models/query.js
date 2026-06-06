@@ -67,9 +67,6 @@ querySchema.index({ userId: 1, querysDate: -1 });
 
 querySchema.index({ query: 'text' });
 
-/**
- * Виртуальное поле: форматированная дата запроса (YYYY-MM-DD)
- */
 querySchema.virtual('formattedDate').get(function () {
   return this.querysDate?.toISOString().split('T')[0];
 });

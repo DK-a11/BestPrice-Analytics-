@@ -46,7 +46,7 @@ export async function parseSulpak(query, pages = 1) {
       const store = 'Sulpak';
       const link = $(header).find('a').attr('href');
       const title = $(header).text().trim();
-      const price = $(header).closest('.product__item').find('.product__item-price').text().trim().replace(/[₸\s]/g, "");
+      const price = $(header).closest('.product__item').find('.product__item-price').text().trim().replace(/(от|[₸\s])/g, "")
 
       const fullurl = link ? (link.startsWith('http') ? link : `https://www.sulpak.kz${link}`) : null;
       const category = extractCategoryFromUrl(fullurl);

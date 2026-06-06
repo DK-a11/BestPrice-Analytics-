@@ -49,7 +49,7 @@ export async function parseAlfa(query, pages = 1) {
       const store = 'Alfa';
       const link = $(header).find('a').attr('href');
       const title = $(header).find('[itemprop="name"]').text().trim();
-      const price = $(header).find('.price').text().trim().replace(/[₸\s]/g, "");
+      const price = $(header).find('.__price > .num').text().trim().replace(/\s/g, "");;
 
       const fullurl = link ? (link.startsWith('http') ? link : `https://alfa.kz${link}`) : null;
       const category = extractCategoryFromUrl(fullurl);

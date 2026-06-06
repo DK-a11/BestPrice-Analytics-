@@ -5,7 +5,7 @@ import AnalyticsBlock from '../components/Analytics/AnalyticsBlock';
 import PopularProductsBlock from '../components/PopularProducts/PopularProductsBlock';
 
 function TelegramAnalytics() {
-  const [searchParams] = useSearchParams(); // 👈 читаем URL-параметры
+  const [searchParams] = useSearchParams(); 
   const queryFromChat = searchParams.get('query') || '';
   
   useEffect(() => {

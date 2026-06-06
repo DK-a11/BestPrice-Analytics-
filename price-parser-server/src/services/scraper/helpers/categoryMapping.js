@@ -25,6 +25,7 @@ export const DIRECT_MAP = {
   //ОДЕЖДА
   'odezhda': 'clothing',
   'futbolka': 'clothing',
+  'futbolki': 'clothing',
   'rubashka': 'clothing',
   'dzhinsy': 'clothing',
   'kurka': 'clothing',
@@ -66,6 +67,12 @@ export const DIRECT_MAP = {
   'lampa': 'home',
   'bytovaya_tekhnika': 'home',
   'vannaya': 'home',
+  'mashina': 'home',
+  'mashiniy': 'home',
+  'holodilnik': 'home',
+  'mikrovolnovka': 'home',
+  'kover': 'home',
+  'shtory': 'home',
 
   //СПОРТ
   'sport': 'sports',

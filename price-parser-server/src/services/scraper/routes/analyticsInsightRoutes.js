@@ -3,11 +3,7 @@ import { getPriceInsights, getStoreComparison } from '../dataBaseIExtract.js';
 
 const router = express.Router();
 
-/**
- * @route   GET /api/analytics/insights?query=iphone&stores=alser,kaspi
- * @desc    Получение инсайтов по товару с фильтрацией по магазинам
- * @access  Public
- */
+
 router.get('/analytics/insights', async (req, res, next) => {
   try {
     const {
@@ -27,7 +23,6 @@ router.get('/analytics/insights', async (req, res, next) => {
       });
     }
 
-    // 🔥 Надёжный парсинг параметра stores (как в comparison)
     let storesArray = [];
     if (stores) {
       storesArray = Array.isArray(stores)
@@ -74,11 +69,7 @@ router.get('/analytics/insights', async (req, res, next) => {
   }
 });
 
-/**
- * @route   GET /api/analytics/insights/comparison?query=iphone&stores=alser,kaspi
- * @desc    Сравнение цен по всем магазинам с фильтрацией
- * @access  Public
- */
+
 router.get('/insights/comparison', async (req, res, next) => {
   try {
     const { query, category, stores } = req.query;
@@ -90,7 +81,7 @@ router.get('/insights/comparison', async (req, res, next) => {
       });
     }
 
-    // 🔥 Парсинг stores для этого эндпоинта тоже
+
     let storesArray = [];
     if (stores) {
       storesArray = Array.isArray(stores)
@@ -102,7 +93,7 @@ router.get('/insights/comparison', async (req, res, next) => {
     const comparison = await getStoreComparison({
       query: query.toLowerCase(),
       category,
-      stores: storesArray  // 🔥 Передаём фильтр в сервис
+      stores: storesArray  
     });
 
     res.json({
@@ -118,11 +109,7 @@ router.get('/insights/comparison', async (req, res, next) => {
   }
 });
 
-/**
- * @route   GET /api/analytics/insights/quick?query=iphone
- * @desc    Быстрый ответ только с лучшей ценой (для превью/виджетов)
- * @access  Public
- */
+
 router.get('/insights/quick', async (req, res, next) => {
   try {
     const { query, stores } = req.query;
@@ -172,7 +159,6 @@ router.get('/insights/quick', async (req, res, next) => {
   }
 });
 
-// 🛡️ Global error handler
 router.use((err, req, res, next) => {
   console.error('❌ Analytics Insight Route Error:', err);
   

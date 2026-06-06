@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import Item from '../../models/items.js';
 
-// 🔥 Подключение к БД — как в оригинале
 mongoose.connect('mongodb://localhost:27017/PriceParserDB');
 
 const escapeRegex = (str) => {
@@ -34,15 +33,6 @@ const capitalizeStore = (store) => {
   return store.charAt(0).toUpperCase() + store.slice(1).toLowerCase();
 };
 
-/**
- * Получение истории цен с фильтрацией по магазинам
- * @param {Object} params
- * @param {string} params.query - поисковый запрос
- * @param {string} [params.category] - категория товара
- * @param {string} [params.startDate] - начальная дата
- * @param {string} [params.endDate] - конечная дата
- * @param {string[]} [params.stores] - массив названий магазинов для фильтрации
- */
 export const getPriceHistoryByStore = async ({
   query,
   category = 'all',
@@ -53,7 +43,7 @@ export const getPriceHistoryByStore = async ({
   try {
     const filter = {};
     
-    // 🔍 Фильтр по названию товара
+    // Фильтр по названию товара
     if (query) {
       const titleFilter = createWordBasedTitleFilter(query);
       if (Object.keys(titleFilter).length > 0) {
@@ -73,22 +63,18 @@ export const getPriceHistoryByStore = async ({
       if (endDate) filter.parsedAt.$lte = new Date(endDate);
     }
     
-    // 🔥 Фильтр по магазинам — с регистронезависимым сравнением
     if (Array.isArray(stores) && stores.length > 0) {
       console.log('🏪 Применяю фильтр по магазинам (история):', stores);
       
-      // 🔍 Сначала проверим, сколько записей находится без фильтра по магазинам
       const countWithoutStoreFilter = await Item.countDocuments(filter);
       console.log(`📊 Записей по запросу "${query}" без фильтра магазинов: ${countWithoutStoreFilter}`);
       
-      // 🔥 Используем case-insensitive regex для надёжного сопоставления
       const storeRegexes = stores.map(s => new RegExp(escapeRegex(s.trim()), 'i'));
       filter.store = { $in: storeRegexes };
       
       const countWithStoreFilter = await Item.countDocuments(filter);
       console.log(`📊 Записей после фильтра магазинов: ${countWithStoreFilter}`);
       
-      // ⚠️ Если 0 — покажем какие магазины реально есть в БД
       if (countWithStoreFilter === 0) {
         // Временно уберём фильтр store для distinct
         const { store: _, ...filterWithoutStore } = filter;

@@ -20,9 +20,7 @@ router.get('/analytics/history', async (req, res, next) => {
       });
     }
 
-    // 🔥 Надёжный парсинг параметра stores:
-    // - строка "alser,kaspi" → ['alser', 'kaspi']
-    // - массив ['alser', 'kaspi'] → ['alser', 'kaspi']
+
     let storesArray = [];
     if (stores) {
       storesArray = Array.isArray(stores)

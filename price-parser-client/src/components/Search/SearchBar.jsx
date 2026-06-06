@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FiSearch, FiX, FiClock, FiTrendingUp } from 'react-icons/fi';
 import useDebounce from '../../hooks/useDebounce';
 import './SearchBar.css';
-import { parseProducts, querySave, getUserHistory, clearUserHistory } from '../../services/api';
+import { parseProducts, querySave, getUserHistory, clearUserHistory, sendPriceReport } from '../../services/api';
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const SearchBar = ({ 
   onSearch, 
@@ -18,15 +20,12 @@ const SearchBar = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  
-  // 🔥 Состояние истории (загружается с бэкенда)
   const [history, setHistory] = useState([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   const debouncedQuery = useDebounce(query, 300);
   const searchRef = useRef(null);
 
-  // 🔥 Загрузка истории при изменении userId
   useEffect(() => {
     if (userId) {
       loadUserHistory(userId);
@@ -35,7 +34,6 @@ const SearchBar = ({
     }
   }, [userId]);
 
-  // 🔥 Загрузка подсказок при вводе
   useEffect(() => {
     if (debouncedQuery.length >= 2) {
       updateLocalSuggestions(debouncedQuery);
@@ -111,7 +109,8 @@ const SearchBar = ({
     setIsLoading(true);
     try {
       const response = await parseProducts(searchQuery, { stores });
-      // Если нужно — обработайте response здесь
+      await sendPriceReport(userId, query, selectedStores);
+
     } catch (error) {
       console.error('Error fetching suggestions:', error);
       setSuggestions([]);
@@ -158,7 +157,6 @@ const SearchBar = ({
     }
   };
 
-  // 🔥 Обработчик отправки формы
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -170,9 +168,11 @@ const SearchBar = ({
   
     addToHistory(query); // уже сохраняет и локально, и в БД
     setShowDropdown(false);
+    fetchSuggestions(query, selectedStores);
+    //delay(5000);
+    //console.log('📤 Отправляем отчёт на email для:', { userId, query, selectedStores });
+    //sendPriceReport(userId, query, selectedStores);
     
-    //fetchSuggestions(query, selectedStores);
-  
     if (onSearch) {
       onSearch(query, { stores: selectedStores });
     }
@@ -212,7 +212,6 @@ const SearchBar = ({
     }
   };
 
-  // 🔥 Рендер контента выпадающего списка
   const renderDropdownContent = () => {
     // Показ подсказок при вводе от 2 символов
     if (query.length >= 2 && suggestions.length > 0) {
@@ -290,8 +289,12 @@ const SearchBar = ({
             <div className="store-toggles-header">
               <span className="toggles-label">Источники:</span>
               <div className="toggles-actions">
-                <button type="button" onClick={onSelectAll} className="toggle-action-btn">Все</button>
-                <button type="button" onClick={onDeselectAll} className="toggle-action-btn">Ничего</button>
+                <button type="button" onClick={onSelectAll} className="toggle-action-btn" disabled={isLoading}>
+                  Все
+                </button>
+                <button type="button" onClick={onDeselectAll} className="toggle-action-btn" disabled={isLoading}>
+                  Ничего
+                </button>
               </div>
             </div>
             <div className="store-chips">
@@ -299,6 +302,7 @@ const SearchBar = ({
                 const isActive = selectedStores.includes(store.id);
                 return (
                   <button
+                    disabled={isLoading}
                     key={store.id}
                     type="button"
                     onClick={() => onToggleStore(store.id)}
@@ -322,7 +326,8 @@ const SearchBar = ({
         )}
 
         {/* 🔥 Поле ввода */}
-        <div className="search-input-wrapper">
+
+	      <div className="search-input-wrapper">
           <FiSearch className={`search-icon ${isLoading ? 'pulse' : ''}`} />
           
           <input
@@ -334,6 +339,7 @@ const SearchBar = ({
             placeholder="Введите название товара..."
             className="search-input"
             autoComplete="off"
+            disabled={isLoading}
           />
 
           {query && (
@@ -342,6 +348,7 @@ const SearchBar = ({
               onClick={handleClearInput}
               className="clear-btn"
               aria-label="Очистить"
+              disabled={isLoading}
             >
               <FiX />
             </button>

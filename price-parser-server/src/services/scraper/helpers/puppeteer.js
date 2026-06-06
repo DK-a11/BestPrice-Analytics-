@@ -43,38 +43,28 @@ export async function getPuppeteerPage(url) {
         browser = await puppeteer.launch(LAUNCH_PUPPETEER_OPTS);
         const page = await browser.newPage();
 
-        // 1. Устанавливаем реалистичный User-Agent
         await page.setUserAgent(REALISTIC_USER_AGENT);
 
-        // 2. Устанавливаем заголовки как у обычного браузера
         await page.setExtraHTTPHeaders(REALISTIC_HEADERS);
 
-        // 3. Устанавливаем реалистичный viewport (если не задан в launch)
         if (!LAUNCH_PUPPETEER_OPTS.defaultViewport) {
             await page.setViewport({ width: 1920, height: 1080 });
         }
 
-        // 4. Случайная задержка перед запросом (имитация человека)
         await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
 
-        // 5. Переход на страницу
         await page.goto(url, PAGE_PUPPETEER_OPTS);
 
-        // 6. Ждём либо контент, либо исчезновение проверки Cloudflare
         await Promise.race([
-            // Ждём появления типичных элементов каталога (адаптируйте под сайт)
             page.waitForSelector('[class*="product"], [class*="item"], .catalog, .shop-name', { timeout: 25000 }).catch(() => {}),
-            // ИЛИ ждём исчезновения экрана загрузки Cloudflare
             page.waitForFunction(() => {
                 const challenge = document.querySelector('#challenge-stage, .lds-ring, [class*="challenge"]');
                 return !challenge;
             }, { timeout: 25000, polling: 500 }).catch(() => {}),
         ]);
 
-        // 7. Небольшая пауза после загрузки для полного рендеринга
         await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
 
-        // 8. Проверяем, не остались ли мы на странице защиты
         const currentUrl = page.url();
         if (currentUrl.includes('/cdn-cgi/challenge-platform/')) {
             console.warn('Cloudflare всё ещё активен. Текущий URL:', currentUrl);
@@ -82,7 +72,6 @@ export async function getPuppeteerPage(url) {
 
         const content = await page.content();
         
-        // 9. Возвращаем не только HTML, но и метаданные для отладки
         return {
             html: content,
             url: currentUrl,
@@ -94,7 +83,6 @@ export async function getPuppeteerPage(url) {
         console.error('Ошибка в getPuppeteerPage:', error.message);
         throw error;
     } finally {
-        // 10. Гарантированно закрываем браузер даже при ошибке
         if (browser) {
             await browser.close();
         }

@@ -41,7 +41,7 @@ export const extractCProducts = async (query, options = {}) => {
   const params = { query };
   
   if (Array.isArray(stores) && stores.length > 0) {
-    params.stores = stores.join(','); // 🔥 Сериализуем в строку: "alser,kaspi"
+    params.stores = stores.join(','); 
   }
 
   const response = await axios.get(`${API_BASE_URL}/analytics/comparison`, { params });
@@ -85,14 +85,23 @@ export const extractProducts = async (query, options = {}) => {
   return response.data;
 };
 
-export const exportProducts = async (query) => {
+export const exportProducts = async (query, options = {}) => {
+  const { stores = [] } = options;
+  
+  const params = { query };
+  
+  if (Array.isArray(stores) && stores.length > 0) {
+    params.stores = stores.join(',');
+  }
+
   const response = await axios.get(`${API_BASE_URL}/products/export`, {
-    params: { query },
+    params,
     responseType: 'blob',
     headers: {
       'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     }
   });
+  
   return response.data;
 };
 
@@ -150,7 +159,6 @@ export const querySave = async ({ userId, query }) => {
 };
 
 
-// 🔹 Получение истории поиска пользователя
 export const getUserHistory = async (userId, limit = 20) => {
   console.log('📥 getUserHistory вызвана с:', { userId, limit });
   
@@ -186,7 +194,6 @@ export const getUserHistory = async (userId, limit = 20) => {
   }
 };
 
-// 🔹 Очистка истории поиска пользователя
 export const clearUserHistory = async (userId) => {
   console.log('🗑️ clearUserHistory вызвана с:', { userId });
   
@@ -219,6 +226,20 @@ export const clearUserHistory = async (userId) => {
     console.error('📄 Response headers:', error.response?.headers);
     throw error;
   }
+};
+
+export const sendPriceReport = async (userId, query, stores = []) => {
+  if (!userId || !query || !Array.isArray(stores) || stores.length === 0) {
+    throw new Error('Missing required parameters: userId, query, stores');
+  }
+
+  const response = await axios.post(`${API_BASE_URL}/sendemail`, {
+    userId,
+    query: query.trim(),
+    stores
+  });
+
+  return response.data;
 };
 
 export default apiClient;

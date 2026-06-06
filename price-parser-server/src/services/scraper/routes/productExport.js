@@ -6,21 +6,29 @@ const router = express.Router();
 
 router.get('/products/export', async (req, res) => {
   try {
-    // 1. Получаем данные (замените на реальный запрос к БД)
-    const { query } = req.query;
+    //Получаем данные (замените на реальный запрос к БД)
+    const { query, stores } = req.query;
 
     if (!query) {
       return res.status(400).json({ error: 'Не указан поисковый запрос' });
     }
 
-    const data = await getProductsByQuery(query.trim());
-    console.log('Данные для экспорта:', data);
+    let storesArray = [];
+    if (stores) {
+      storesArray = Array.isArray(stores)
+        ? stores.map(s => String(s).trim().toLowerCase())
+        : stores.split(',').map(s => s.trim().toLowerCase());
+      storesArray = storesArray.filter(Boolean);
+    }
 
-    // 2. Создаём книгу
+    const data = await getProductsByQuery(query.trim(), { stores: storesArray });
+    //console.log('Данные для экспорта:', data);
+
+    // Создаём книгу
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Товары');
 
-    // 3. Описываем колонки
+    // Описываем колонки
     worksheet.columns = [
       { header: 'ID', key: 'id', width: 25 },
       { header: 'Название', key: 'name', width: 50, style: { alignment: { wrapText: true } }},
@@ -31,10 +39,10 @@ router.get('/products/export', async (req, res) => {
 
     //console.log('Данные для экспорта:', data);
 
-    // 4. Загружаем данные
+    // Загружаем данные
     worksheet.addRows(data);
 
-    // 5. Отправляем файл
+    // Отправляем файл
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

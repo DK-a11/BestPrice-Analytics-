@@ -31,7 +31,7 @@ export async function getItemsByTitle(query, options = {}) {
     const baseFilter = { $and: searchConditions };
     let finalFilter = baseFilter;
 
-    // 🔍 Отладка: сколько товаров вообще находится по запросу?
+    // Отладка: сколько товаров вообще находится по запросу?
     const titleMatchCount = await Item.countDocuments(baseFilter);
     console.log(`📊 Товаров по названию "${query}": ${titleMatchCount}`);
 
@@ -39,8 +39,6 @@ export async function getItemsByTitle(query, options = {}) {
     if (stores.length > 0) {
       console.log('🏪 Применяю фильтр по магазинам:', stores);
       
-      // 🔥 Используем case-insensitive regex без жёстких границ ^$
-      // Это спасёт от проблем с пробелами или разными регистрами в БД
       const storeRegexes = stores.map(s => new RegExp(escapeRegExp(s.trim()), 'i'));
       finalFilter = { $and: [baseFilter, { store: { $in: storeRegexes } }] };
     }
@@ -48,7 +46,7 @@ export async function getItemsByTitle(query, options = {}) {
     const items = await Item.find(finalFilter).lean();
     console.log(`✅ После фильтрации магазинов: ${items.length} товаров`);
 
-    // 🔍 Если 0, покажем какие магазины реально есть в БД для этого запроса
+    //Если 0, покажем какие магазины реально есть в БД для этого запроса
     if (items.length === 0 && stores.length > 0) {
       const actualStores = await Item.distinct('store', baseFilter);
       console.warn('⚠️ Фильтр вернул 0. Реальные store в БД:', actualStores);

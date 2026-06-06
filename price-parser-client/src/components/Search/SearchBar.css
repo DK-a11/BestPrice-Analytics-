@@ -42,6 +42,12 @@
   background: transparent;
 }
 
+.search-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
+  color: #8e8e93;
+}
+
 .search-input::placeholder {
   color: #9CA3AF;
 }
@@ -168,3 +174,4 @@
     max-height: 300px;
   }
 }
+

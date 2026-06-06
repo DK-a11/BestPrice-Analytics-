@@ -20,7 +20,7 @@ const SITE = `https://obyavleniya.kaspi.kz/k--${query}/`;
           const store = 'Kaspi';
           const link = $(header).find('a').first().attr('href');
           const title = $(header).find('.listing-item-horizontal__title').text().trim();
-          const price = $(header).find('[class="listing-item-horizontal__price"]').text().trim().replace(/[₸\s]/g, "");
+          const price = $(header).find('[class="listing-item-horizontal__price"]').text().trim().replace(/^[оo][тt]\s*|[₸\s]/gi, ""); // replace "от" 
             
         queryitems.push({ store, title, price, link, query })
 

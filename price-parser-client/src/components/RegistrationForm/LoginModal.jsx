@@ -170,7 +170,6 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister, onLoginSuccess }) => 
           }));
         }
         
-        // 📋 Логирование для отладки
         console.warn('🔍 Ответ сервера:', error.response.data);
         
       } else if (error.request) {

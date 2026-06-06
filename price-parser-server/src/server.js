@@ -13,6 +13,7 @@ import userRoutes from './services/scraper/routes/userRoutes.js';
 import authRoutes from './services/scraper/routes/authRoutes.js';
 import querySaveRoutes from './services/scraper/routes/querySaveRoutes.js';
 import queryhistory from './services/scraper/routes/queryhistory.js';
+import emailRoutes from './services/scraper/routes/emailRoutes.js';
 
 dotenv.config();
 const app = express(); // Разрешаем CORS для нашего фронтенда
@@ -30,7 +31,7 @@ const ALLOWED_ORIGINS = [
 
 const STOP_WORDS = [
     "привет", "здравствуйте", "hello", "hi", "hey",
-    "start", "помощь", "help", "команды", "/help", "/analytics", "/start",
+    "start", "помощь", "help", "команды",  "/analytics", 
     "как дела", "кто ты", "что ты умеешь"
 ];
 
@@ -57,7 +58,25 @@ bot.on("message", async (msg) => {
         "🚀 /start — начать работу с ботом\n" +
         "Запускает бота, активирует все функции и помогает быстро приступить к работе.\n" +
         "❓ /help — справка\n" +
-        "Показывает список доступных команд и краткое описание того, как ими пользоваться.\n"
+        "Показывает список доступных команд и краткое описание того, как ими пользоваться.\n" +
+        "/FAQ — часто задаваемые вопросы\n" +
+        "Предоставляет ответы на самые популярные вопросы о работе бота и его функционале."
+      );
+    }
+
+    if (text === "/FAQ") {
+      return await bot.sendMessage(chatId, 
+        "Часто задаваемые вопросы:\n" +
+        "1. Как часто система обновляет данные о ценах?\n" +
+        "Ответ: Система не привязана к жесткому расписанию — роботы работают по вашему запросу.\n" +
+        "2. Какие интернет-магазины и сайты можно отслеживать?\n" +
+        "Система поддерживает парсинг большинства публичных сайтов включая маркетплейсы (Alser, Sulpak, Kaspi, Alfa).\n" +
+        "3. Можно ли отслеживать не только цену, но и наличие товара?\n" +
+        "Система добавляет только существующие в наличии данные для аналитики \n" +
+        "4. Можно ли сравнивать цены по нескольким магазинам?\n" +
+        "Да, система предоставляет информацию о ценах, наличии и других характеристиках товаров сразу с нескольких магазинов.\n" +
+        "5.  Как выглядят аналитические отчеты и можно ли их экспортировать?\n" +
+        "Аналитические отчеты предоставляются в виде Excel.\n"
       );
     }
 
@@ -75,13 +94,13 @@ bot.on("message", async (msg) => {
     // 4. Безопасная передача названия в URL
     const safeQuery = encodeURIComponent(text);
     
-    return await bot.sendMessage(chatId, `📦 Товары для аналитики: ${text}`, {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "Смотреть аналитику", web_app: { url: `${weburl}${safeQuery}` } }]
-        ]
-      }
-    });
+    //return await bot.sendMessage(chatId, `📦 Товары для аналитики: ${text}`, {
+    //  reply_markup: {
+    //    inline_keyboard: [
+    //      [{ text: "Смотреть аналитику", web_app: { url: `${weburl}${safeQuery}` } }]
+    //    ]
+    //  }
+    //});
   } catch (error) {
     console.error(`[Bot Error] chatId: ${chatId}, text: "${text}"`, error.message);
     // Можно добавить уведомление пользователю, если ошибка критичная
@@ -118,6 +137,7 @@ async function startServer() {
   app.use('/api', authRoutes); 
   app.use('/api', querySaveRoutes);
   app.use('/api', queryhistory); // Роуты для истории запросов
+  app.use('/api', emailRoutes); // Роуты для отправки email
 
 
   app.listen(4200, () => {

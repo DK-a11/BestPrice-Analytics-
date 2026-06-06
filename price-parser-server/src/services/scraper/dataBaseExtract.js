@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import Item from '../../models/items.js';
 
-// 🔥 Подключение к БД — как в оригинале
 mongoose.connect('mongodb://localhost:27017/PriceParserDB');
 
 const escapeRegex = (str) => {
@@ -57,20 +56,17 @@ export const getProductsByQuery = async (query, options = {}) => {
       throw new Error('Query parameter is required and must be a string');
     }
 
-    // 🔍 Создаём базовый фильтр по названию
     const titleFilter = createWordBasedTitleFilter(query);
     if (Object.keys(titleFilter).length === 0) {
       console.warn('⚠️ Пустой или невалидный запрос:', query);
       return [];
     }
 
-    // 🔥 Формируем итоговый фильтр с учётом магазинов
     let finalFilter = titleFilter;
     
     if (stores.length > 0) {
       console.log('🏪 [products] Фильтр по магазинам:', stores);
       
-      // 🔥 Case-insensitive regex для надёжного сопоставления названий магазинов
       const storeRegexes = stores.map(s => 
         new RegExp(escapeRegex(s.trim()), 'i')
       );
@@ -80,7 +76,6 @@ export const getProductsByQuery = async (query, options = {}) => {
       };
     }
 
-    // 🔍 Отладка: сколько товаров находится до и после фильтрации
     const titleMatchCount = await Item.countDocuments(titleFilter);
     console.log(`📊 [products] Товаров по названию "${query}": ${titleMatchCount}`);
 
@@ -90,7 +85,6 @@ export const getProductsByQuery = async (query, options = {}) => {
 
     console.log(`✅ [products] После фильтрации: ${items.length} товаров`);
 
-    // 🔍 Если 0 результатов при активном фильтре — покажем какие магазины есть в БД
     if (items.length === 0 && stores.length > 0) {
       const actualStores = await Item.distinct('store', titleFilter);
       console.warn('⚠️ [products] Фильтр вернул 0. Реальные store в БД:', actualStores);

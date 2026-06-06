@@ -11,7 +11,6 @@ router.get('/analytics/comparison', async (req, res) => {
       return res.status(400).json({ error: 'Parameter "query" is required' });
     }
 
-    // 🔥 Надёжный парсинг массива магазинов
     let storesArray = [];
     if (stores) {
       storesArray = Array.isArray(stores)

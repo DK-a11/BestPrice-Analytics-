@@ -19,7 +19,7 @@ const PopularProductsBlock = ({ query, selectedStores = [] }) => {
   const [stores, setStores] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setcurrentPage] = useState(1);
-  const [productsPerPage, setProductsPerPage] = useState(5);
+  const [productsPerPage, setProductsPerPage] = useState(10);
 
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
@@ -106,6 +106,7 @@ const PopularProductsBlock = ({ query, selectedStores = [] }) => {
       const productsresponse = await extractProducts(query, { stores: selectedStores });
 
       const productsData = productsresponse.data || [];
+      console.log('Extracted products:', productsData);
 
       // Фильтрация по категории
       const filteredProducts = selectedCategory === 'all'

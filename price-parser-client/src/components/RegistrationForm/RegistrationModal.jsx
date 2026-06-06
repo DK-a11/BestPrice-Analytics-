@@ -212,7 +212,6 @@ const RegistrationModal = ({ isOpen, onClose, onSwitchToLogin }) => {
     console.log('📤 Отправка данных регистрации:', submissionData);
 
     try {
-      // 🚀 Реальный API-запрос через SaveUsers
       const result = await SaveUsers(submissionData);
       
       console.log('✅ Регистрация успешна:', result);

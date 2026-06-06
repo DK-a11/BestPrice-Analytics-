@@ -17,7 +17,6 @@ router.get('/analytics/products', async (req, res) => {
       });
     }
 
-    // 🔥 Надёжный парсинг параметра stores
     let storesArray = [];
     if (stores) {
       storesArray = Array.isArray(stores)
@@ -35,6 +34,7 @@ router.get('/analytics/products', async (req, res) => {
 
     // Передаём stores в сервисную функцию
     const data = await getProductsByQuery(query.trim(), { stores: storesArray });
+    console.log("[products] fetched data:", data);
     
     return res.status(200).json({
       success: true,
