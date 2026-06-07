@@ -16,7 +16,8 @@ import queryhistory from './services/scraper/routes/queryhistory.js';
 import emailRoutes from './services/scraper/routes/emailRoutes.js';
 
 dotenv.config();
-const app = express(); // Разрешаем CORS для нашего фронтенда
+const app = express(); 
+app.set('trust proxy', 1);// Разрешаем CORS для нашего фронтенда
 const TOKEN = process.env.TOKEN_BOT || "7757852587:AAH2XzfSiarMbB5H5ZoFR6WxukiXbHPB_dA"; // Получаем токен из переменных окружения
 const bot = new nodeTelegramBotApi(TOKEN, { polling: true });
 const weburl = `https://dismay-bonanza-duo.ngrok-free.dev/tg-app?query=`;
