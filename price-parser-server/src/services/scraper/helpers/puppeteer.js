@@ -1,21 +1,28 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import chromium from "@sparticuz/chromium";
 
 puppeteer.use(StealthPlugin());
 
+// Определяем окружение
+const isProduction = process.env.NODE_ENV === 'production';
+
 export const LAUNCH_PUPPETEER_OPTS = {
-    headless: false, 
-    args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1920x1080',
-        '--disable-blink-features=AutomationControlled',
-        '--disable-features=IsolateOrigins,site-per-process',
-    ],
-    defaultViewport: null,
+    headless: isProduction ? chromium.headless : false,
+    args: isProduction 
+        ? chromium.args  // Используем аргументы Chromium для Render
+        : [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu',
+            '--window-size=1920x1080',
+            '--disable-blink-features=AutomationControlled',
+            '--disable-features=IsolateOrigins,site-per-process',
+        ],
+    defaultViewport: chromium.defaultViewport,
+    executablePath: isProduction ? await chromium.executablePath() : undefined,
 };
 
 export const PAGE_PUPPETEER_OPTS = {
@@ -44,7 +51,6 @@ export async function getPuppeteerPage(url) {
         const page = await browser.newPage();
 
         await page.setUserAgent(REALISTIC_USER_AGENT);
-
         await page.setExtraHTTPHeaders(REALISTIC_HEADERS);
 
         if (!LAUNCH_PUPPETEER_OPTS.defaultViewport) {
@@ -52,7 +58,6 @@ export async function getPuppeteerPage(url) {
         }
 
         await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
-
         await page.goto(url, PAGE_PUPPETEER_OPTS);
 
         await Promise.race([
