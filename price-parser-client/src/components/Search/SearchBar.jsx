@@ -109,7 +109,7 @@ const SearchBar = ({
     setIsLoading(true);
     try {
       const response = await parseProducts(searchQuery, { stores });
-      await sendPriceReport(userId, query, selectedStores);
+      //await sendPriceReport(userId, query, selectedStores);
 
     } catch (error) {
       console.error('Error fetching suggestions:', error);
