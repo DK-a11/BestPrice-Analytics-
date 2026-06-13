@@ -50,6 +50,15 @@ export async function getPuppeteerPage(url) {
         browser = await puppeteer.launch(LAUNCH_PUPPETEER_OPTS);
         const page = await browser.newPage();
 
+        //  ВАЖНО: Маскировка webdriver ДО загрузки страницы
+        await page.evaluateOnNewDocument(() => {
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+            Object.defineProperty(navigator, 'languages', { get: () => ['ru-RU', 'ru', 'en'] });
+            Object.defineProperty(navigator, 'language', { get: () => 'ru-RU' });
+            window.chrome = { runtime: {} };
+        });
+
         await page.setUserAgent(REALISTIC_USER_AGENT);
         await page.setExtraHTTPHeaders(REALISTIC_HEADERS);
 
@@ -58,30 +67,47 @@ export async function getPuppeteerPage(url) {
         }
 
         await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+        
+        console.log(`🌐 Переход на: ${url}`);
         await page.goto(url, PAGE_PUPPETEER_OPTS);
 
-        await Promise.race([
-            page.waitForSelector('[class*="product"], [class*="item"], .catalog, .shop-name', { timeout: 25000 }).catch(() => {}),
-            page.waitForFunction(() => {
-                const challenge = document.querySelector('#challenge-stage, .lds-ring, [class*="challenge"]');
-                return !challenge;
-            }, { timeout: 25000, polling: 500 }).catch(() => {}),
-        ]);
+        // 🔥 Ждём пока Cloudflare пройдёт (до 30 секунд)
+        console.log('⏳ Ожидание прохождения Cloudflare...');
+        for (let i = 0; i < 6; i++) {
+            const challenge = await page.$('#challenge-stage, .lds-ring, [class*="challenge"]');
+            if (!challenge) {
+                console.log('✅ Cloudflare пройден');
+                break;
+            }
+            console.log(` Cloudflare активен, попытка ${i + 1}/6`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
 
         await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
 
         const currentUrl = page.url();
-        if (currentUrl.includes('/cdn-cgi/challenge-platform/')) {
-            console.warn('Cloudflare всё ещё активен. Текущий URL:', currentUrl);
-        }
-
         const content = await page.content();
         
+        // 🔥 Логи для диагностики
+        console.log(`📄 URL: ${currentUrl}`);
+        console.log(`📏 HTML длина: ${content.length}`);
+        console.log(`️ Title: ${await page.title()}`);
+        
+        // Проверка на Cloudflare
+        const isCloudflare = content.includes('challenge-platform') || 
+                            content.includes('turnstile') ||
+                            content.includes('Just a moment') ||
+                            currentUrl.includes('/cdn-cgi/challenge-platform/');
+        
+        if (isCloudflare) {
+            console.warn('⚠️ Cloudflare всё ещё активен!');
+        }
+
         return {
             html: content,
             url: currentUrl,
             title: await page.title(),
-            isCloudflare: content.includes('challenge-platform') || content.includes('turnstile')
+            isCloudflare
         };
 
     } catch (error) {
